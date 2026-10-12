@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  >
+
+  <title>Vex 5</title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/EXM1LITARY/lio@7beab336469d96d153903e03dfe089ff2d2b035c/other/vex5/assets/css/app.css"
+  >
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #content {
+      width: 100%;
+      height: 100%;
+    }
+
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      background: #000;
+      color: white;
+
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+
+      z-index: 999999;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="content"></div>
+
+<div id="loader">
+  Loading Vex 5...
+</div>
+
+<div id="orientation"></div>
+
+<script>
+
+const VERSION_SCRIPT =
+  "https://cdn.jsdelivr.net/gh/bobydob/JSEngine@0f8467a67ec67e4119180e5d2bef3946fe223c8c/build/v4/version.js";
+
+const GAME_SCRIPT =
+  "https://cdn.jsdelivr.net/gh/bobydob/JSEngine@c9697620dde0cb058865163e27b83208dff2505b/build/v5/v5.min.js";
+
+
+function loadScript(url) {
+
+  return new Promise(function(resolve, reject) {
+
+    const script = document.createElement("script");
+
+    script.src = url;
+    script.async = false;
+
+    script.onload = function() {
+      console.log("Loaded:", url);
+      resolve();
+    };
+
+    script.onerror = function() {
+      console.error("FAILED:", url);
+      reject(new Error("Could not load " + url));
+    };
+
+    document.head.appendChild(script);
+
+  });
+
+}
+
+
+async function startVex() {
+
+  const loader = document.getElementById("loader");
+
+  try {
+
+    /*
+      STEP 1
+      Load the version information required by
+      the Vex engine.
+    */
+
+    await loadScript(
+      VERSION_SCRIPT + "?cache=" + Date.now()
+    );
+
+
+    console.log(
+      "Version variable:",
+      window.version
+    );
+
+
+    /*
+      If version.js loaded but didn't create the
+      variable, stop here and tell us.
+    */
+
+    if (typeof window.version === "undefined") {
+
+      throw new Error(
+        "version.js loaded but did not define window.version"
+      );
+
+    }
+
+
+    /*
+      STEP 2
+      Load Vex 5.
+    */
+
+    await loadScript(
+      GAME_SCRIPT + "?v=" + encodeURIComponent(window.version)
+    );
+
+
+    console.log(
+      "Vex5:",
+      window.Vex5
+    );
+
+
+    /*
+      STEP 3
+      Make sure the game constructor exists.
+    */
+
+    if (
+      typeof window.Vex5 === "undefined" ||
+      typeof window.Vex5.Game !== "function"
+    ) {
+
+      throw new Error(
+        "Vex5.Game does not exist."
+      );
+
+    }
+
+
+    /*
+      STEP 4
+      Start the game.
+    */
+
+    console.log("Starting Vex 5...");
+
+    new window.Vex5.Game();
+
+
+    /*
+      Remove loading screen.
+    */
+
+    loader.style.display = "none";
+
+
+    console.log(
+      "Vex 5 started successfully."
+    );
+
+
+  }
+
+  catch(error) {
+
+    console.error(
+      "VEX START ERROR:",
+      error
+    );
+
+    loader.innerHTML =
+      "Vex 5 failed to start.<br><br>" +
+      "<small>" +
+      error.message +
+      "</small>";
+
+  }
+
+}
+
+
+startVex();
+
+</script>
+
+</body>
+</html>

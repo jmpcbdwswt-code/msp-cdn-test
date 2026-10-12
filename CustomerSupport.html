@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PXHK7Q7G3Z"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag("js", new Date());
+        gtag("config", "G-PXHK7Q7G3Z");
+    </script>
+
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <title>Customer Support WebPort</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1f1f20;
+        }
+
+        #unity-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+
+            width: 100vw !important;
+            height: 100vh !important;
+
+            display: block;
+            border: 0;
+            outline: none;
+
+            background: #1f1f20;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/gh/shayderrr/portsv4@b262cde76d7bb7adf9d47a3a962cb0cede17f7b4/CustomerSupport/Build/CustomerSupportPort.loader.js"></script>
+
+    <script>
+        const BASE_URL =
+            "https://cdn.jsdelivr.net/gh/shayderrr/portsv4@b262cde76d7bb7adf9d47a3a962cb0cede17f7b4/CustomerSupport/Build/";
+
+        const canvas = document.getElementById("unity-canvas");
+
+        /*
+         * Keep Unity's render resolution matched to
+         * the size of the browser window.
+         */
+        function resizeGame() {
+            const pixelRatio = window.devicePixelRatio || 1;
+
+            canvas.style.width = "100vw";
+            canvas.style.height = "100vh";
+
+            canvas.width = Math.floor(window.innerWidth * pixelRatio);
+            canvas.height = Math.floor(window.innerHeight * pixelRatio);
+        }
+
+        resizeGame();
+
+        window.addEventListener("resize", resizeGame);
+
+        async function fetchAndMerge(fileParts) {
+            const blobs = await Promise.all(
+                fileParts.map(async (part) => {
+                    const response = await fetch(BASE_URL + part);
+
+                    if (!response.ok) {
+                        throw new Error(
+                            "Failed to load " +
+                            part +
+                            " (" +
+                            response.status +
+                            ")"
+                        );
+                    }
+
+                    return response.blob();
+                })
+            );
+
+            return URL.createObjectURL(new Blob(blobs));
+        }
+
+        (async () => {
+            try {
+                const dataParts = [
+                    "CustomerSupportPort.data.part1",
+                    "CustomerSupportPort.data.part2"
+                ];
+
+                const wasmParts = [
+                    "CustomerSupportPort.wasm.part1",
+                    "CustomerSupportPort.wasm.part2"
+                ];
+
+                const [
+                    mergedDataUrl,
+                    mergedWasmUrl
+                ] = await Promise.all([
+                    fetchAndMerge(dataParts),
+                    fetchAndMerge(wasmParts)
+                ]);
+
+                await createUnityInstance(
+                    canvas,
+                    {
+                        arguments: [],
+
+                        dataUrl: mergedDataUrl,
+
+                        frameworkUrl:
+                            BASE_URL +
+                            "CustomerSupportPort.framework.js",
+
+                        codeUrl: mergedWasmUrl,
+
+                        streamingAssetsUrl:
+                            BASE_URL + "StreamingAssets",
+
+                        companyName: "DefaultCompany",
+
+                        productName: "ExportedProject",
+
+                        productVersion: "1.0",
+
+                        matchWebGLToCanvasSize: true
+                    }
+                );
+
+                resizeGame();
+
+            } catch (error) {
+                console.error(
+                    "Failed to start Customer Support:",
+                    error
+                );
+            }
+        })();
+    </script>
+
+</body>
+</html>

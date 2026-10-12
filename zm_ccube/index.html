@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<base href="/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cheese Cube — Zombies</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #1b1810; }
+    body { color: #fff; font: 14px/1.4 system-ui, sans-serif; user-select: none; }
+    canvas { display: block; width: 100%; height: 100%; outline: none; }
+    #debug, #center { position: fixed; margin: 0; pointer-events: none; }
+    #debug { top: 10px; right: 10px; padding: 6px 9px; background: #0008; font: 12px/1.4 monospace; white-space: pre; }
+    /* Messages in the style of the game's iPrintLnBold: plain white text in the upper middle. */
+    #center { left: 50%; top: 24%; transform: translateX(-50%); font: calc(100vh / 720 * 21)/1.35 HudText, system-ui, sans-serif; color: #fff; text-align: center; white-space: pre; text-shadow: 0 0 3px #000, 0 1px 4px #000; z-index: 3; }
+    #center { max-width: 90vw; white-space: pre-wrap; }
+    @keyframes deny { 50% { color: #ff5a4a; } }
+    #damage { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, transparent 45%, #a0000088 100%); }
+    [hidden] { display: none !important; }
+    #coop-notice { z-index: 3; position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); padding: 8px 14px; background: #2a0d0bd0; color: #ffd7cf; font: 600 15px system-ui; border-radius: 3px; pointer-events: none; text-align: center; }
+  </style>
+  <link rel="stylesheet" href="./game/hud.css">
+  <link rel="stylesheet" href="./game/menu.css">
+  <script type="importmap">
+    {"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/jsm/","three-mesh-bvh":"./vendor/bvh.js","@recast-navigation/core":"./vendor/recast-core.mjs","@recast-navigation/wasm":"./vendor/recast-wasm.js"}}
+  </script>
+</head>
+<body data-map="zm_ccube" data-title="Cheese Cube">
+  <!-- The map's own loading screen, as the game shows a Workshop map while it loads. -->
+  <div id="loading"><img src="./zm_ccube/menu/loading.jpg" alt="" onerror="this.remove()"><div class="loading-bar"><i id="loading-fill"></i></div><p id="status" role="status">Loading Cheese Cube…</p></div>
+  <div id="damage"></div>
+  <!-- The original BO3 Zombies HUD, built by web/game/hud.js from the game's own images. -->
+  <div id="hud" class="hidden"></div>
+  <p id="center" hidden></p>
+  <!-- The Zombies menus (web/game/menu.js): the frontend lobby before a match, the start menu during one. -->
+  <div id="help" class="menu frontend" hidden>
+    <video id="menu-video" class="menu-video" src="./zm_ccube/menu/frontend.mp4" poster="./zm_ccube/menu/frontend.jpg" muted loop playsinline preload="auto"></video>
+    <div class="menu-shade"></div>
+    <div class="menu-left">
+      <i class="menu-rail"></i>
+      <h1 id="menu-title">Zombies</h1>
+      <p id="help-status" class="menu-mode">Offline</p>
+      <nav id="menu-main" class="menu-list" aria-label="Menu">
+        <button id="menu-play" type="button" data-nav-default>Start Game</button>
+        <button id="coop-open" type="button" disabled>Play with Friends</button>
+        <button type="button" data-open="menu-options">Options</button>
+        <button type="button" data-open="menu-controls">Controls</button>
+        <button id="support-open" type="button" data-open="menu-support" hidden>Support the Servers</button>
+        <button id="menu-restart" type="button" hidden>Restart Game</button>
+        <button id="coop-exit" type="button" hidden>Leave Co-op</button>
+      </nav>
+      <p id="menu-leader"></p>
+      <section id="coop-panel" class="menu-sub" hidden aria-label="Play with friends">
+        <h2 class="menu-heading">Play with Friends</h2>
+        <div id="coop-connect" class="menu-list-inline">
+          <label class="menu-field">Name <input id="coop-name" maxlength="20" autocomplete="nickname" placeholder="Survivor"></label>
+          <button id="coop-host" type="button">Create Room</button>
+          <label class="menu-field">Room code <input id="coop-code" maxlength="6" placeholder="CODE" autocomplete="off" autocapitalize="characters"></label>
+          <button id="coop-join" type="button">Join Room</button>
+        </div>
+        <div id="coop-room" hidden>
+          <p class="menu-room">Room <strong id="coop-room-code"></strong></p>
+          <button id="coop-ready" type="button">Ready</button>
+          <button id="coop-start" type="button" hidden>Start Game</button>
+          <button id="coop-copy" type="button">Copy Invite</button>
+        </div>
+        <button id="coop-leave" type="button">Back</button>
+        <p id="coop-status" class="menu-note" role="status" aria-live="polite"></p>
+      </section>
+      <section id="menu-options" class="menu-sub" hidden aria-label="Options">
+        <h2 class="menu-heading">Options</h2>
+        <label class="menu-slider">Field of View <input id="fov" type="range" min="60" max="110" value="75"><output id="fov-value">75°</output></label>
+        <label class="menu-slider">Sensitivity <input id="sensitivity" type="range" min="0.25" max="3" step="0.05" value="1"><output id="sensitivity-value">1.00</output></label>
+        <label class="menu-slider">Volume <input id="volume" type="range" min="0" max="1" step="0.05" value="1"><output id="volume-value">100%</output></label>
+        <button type="button" data-back>Back</button>
+      </section>
+      <section id="menu-controls" class="menu-sub" hidden aria-label="Controls">
+        <h2 class="menu-heading">Controls</h2>
+        <dl class="menu-controls">
+          <dt>W A S D</dt><dd>Move</dd><dt>Shift</dt><dd>Sprint</dd><dt>Space</dt><dd>Jump</dd><dt>C / Ctrl</dt><dd>Crouch</dd>
+          <dt>Mouse</dt><dd>Fire / aim down sights</dd><dt>R</dt><dd>Reload</dd><dt>V / Mouse 3</dt><dd>Melee</dd><dt>G</dt><dd>Grenade</dd>
+          <dt>Hold F</dt><dd>Buy, use, revive</dd><dt>1–3 / Wheel</dt><dd>Switch weapons</dd><dt>Esc</dt><dd>Menu</dd><dt>F3</dt><dd>Performance</dd>
+        </dl>
+        <dl id="menu-controls-pad" class="menu-controls" hidden></dl>
+        <button type="button" data-back>Back</button>
+      </section>
+      <section id="menu-support" class="menu-sub" hidden aria-label="Support the servers">
+        <h2 class="menu-heading">Support the Servers</h2>
+        <p id="support-message" class="menu-support-text"></p>
+        <ul id="support-wallets" class="menu-wallets"></ul>
+        <p id="support-status" class="menu-note" role="status" aria-live="polite"></p>
+        <button type="button" data-back>Back</button>
+      </section>
+      <figure class="menu-map"><img src="./zm_ccube/menu/preview.jpg" alt="Cheese Cube"><figcaption>zm_ccube</figcaption></figure>
+    </div>
+    <aside class="menu-right">
+      <p id="menu-party-head">1 Player (4 Max)</p>
+      <div class="menu-score-head"><span>Score</span><span>Kills</span><span>Heads</span></div>
+      <ul id="menu-party-list"></ul>
+      <ul id="coop-roster" hidden></ul>
+      <section class="menu-intel"><header>Objective</header><p id="objective"></p><p id="hazard"></p></section>
+    </aside>
+    <footer class="menu-footer"><span><kbd id="menu-back-key">ESC</kbd>Back</span><span id="menu-hint">Click the game to play</span></footer>
+  </div>
+  <div id="coop-notice" hidden role="status"></div>
+  <pre id="debug" hidden></pre>
+  <script type="module" src="./game/main.js"></script>
+</body>
+</html>

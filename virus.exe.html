@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Windows System Utility</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #050505;
+  color: #d7d7d7;
+  font-family: Consolas, "Courier New", monospace;
+  overflow: hidden;
+}
+
+#terminal {
+  width: 100%;
+  height: 100vh;
+  padding: 24px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.header {
+  color: white;
+  margin-bottom: 18px;
+}
+
+.command {
+  color: #ddd;
+}
+
+.green {
+  color: #39ff6a;
+}
+
+.yellow {
+  color: #ffd43b;
+}
+
+.red {
+  color: #ff4141;
+}
+
+.dim {
+  color: #888;
+}
+
+#output {
+  height: calc(100vh - 180px);
+  overflow: hidden;
+}
+
+.line {
+  margin: 2px 0;
+}
+
+.progress-container {
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  bottom: 35px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.progress-border {
+  width: 100%;
+  height: 18px;
+  border: 1px solid #777;
+  padding: 2px;
+}
+
+#progress {
+  height: 100%;
+  width: 0%;
+  background: #d7d7d7;
+}
+
+#restartMessage {
+  display: none;
+  margin-top: 18px;
+  color: #ff4141;
+  font-size: 18px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="terminal">
+
+  <div class="header">
+    Microsoft Windows [Version 10.0.26100.6584]<br>
+    (c) Microsoft Corporation. All rights reserved.
+  </div>
+
+  <div class="command">
+    C:\Users\User&gt; virus.exe
+  </div>
+
+  <br>
+
+  <div id="output"></div>
+
+  <div id="restartMessage">
+    RESTART REQUIRED<br>
+    <span class="yellow">
+      System changes will take effect after restart.
+    </span>
+  </div>
+
+  <div class="progress-container">
+
+    <div class="progress-info">
+      <span id="operation">Initializing...</span>
+      <span id="percent">0%</span>
+    </div>
+
+    <div class="progress-border">
+      <div id="progress"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const output = document.getElementById("output");
+const progress = document.getElementById("progress");
+const percentText = document.getElementById("percent");
+const operation = document.getElementById("operation");
+const restartMessage = document.getElementById("restartMessage");
+
+let percent = 0;
+let fileNumber = 0;
+
+const fakeFiles = [
+  "C:\\Windows\\System32\\config\\SYSTEM",
+  "C:\\Windows\\System32\\drivers\\disk.sys",
+  "C:\\Windows\\System32\\kernel32.dll",
+  "C:\\Windows\\System32\\winload.exe",
+  "C:\\Windows\\explorer.exe",
+  "C:\\Users\\User\\Documents\\",
+  "C:\\Users\\User\\Downloads\\",
+  "C:\\Users\\User\\Desktop\\",
+  "C:\\Program Files\\Common Files\\",
+  "C:\\ProgramData\\Microsoft\\Windows\\"
+];
+
+function addLine(text, className = "") {
+
+  const line = document.createElement("div");
+
+  line.className = "line " + className;
+  line.textContent = text;
+
+  output.appendChild(line);
+
+  while (output.children.length > 25) {
+    output.removeChild(output.firstChild);
+  }
+}
+
+addLine("[SYSTEM] Initializing executable...");
+addLine("[SYSTEM] Checking permissions...", "dim");
+
+setTimeout(() => {
+  addLine("[OK] Process initialized.", "green");
+}, 800);
+
+setTimeout(() => {
+  addLine("[OK] System scan started.", "green");
+}, 1500);
+
+const interval = setInterval(() => {
+
+  let increase;
+
+  if (percent > 72 && percent < 78) {
+    increase = Math.random() > 0.75 ? 1 : 0;
+  } else {
+    increase = Math.floor(Math.random() * 3) + 1;
+  }
+
+  percent += increase;
+
+  if (percent > 100) {
+    percent = 100;
+  }
+
+  progress.style.width = percent + "%";
+  percentText.textContent = percent + "%";
+
+  const file =
+    fakeFiles[Math.floor(Math.random() * fakeFiles.length)];
+
+  fileNumber++;
+
+  addLine(
+    "[" +
+    String(fileNumber).padStart(4, "0") +
+    "] SCANNING " +
+    file
+  );
+
+  if (percent < 20) {
+
+    operation.textContent = "Scanning system files...";
+
+  } else if (percent < 40) {
+
+    operation.textContent = "Checking user directories...";
+
+  } else if (percent < 60) {
+
+    operation.textContent = "Analyzing system configuration...";
+
+  } else if (percent < 75) {
+
+    operation.textContent = "Modifying system configuration...";
+
+    if (percent === 60 || percent === 61) {
+      addLine(
+        "[WARNING] Security service response unavailable.",
+        "yellow"
+      );
+    }
+
+  } else if (percent < 90) {
+
+    operation.textContent = "Finalizing operation...";
+
+    if (Math.random() > 0.85) {
+      addLine(
+        "[WARNING] System protection unavailable.",
+        "yellow"
+      );
+    }
+
+  } else {
+
+    operation.textContent = "Completing...";
+
+  }
+
+  if (percent >= 100) {
+
+    clearInterval(interval);
+
+    progress.style.width = "100%";
+    percentText.textContent = "100%";
+
+    addLine("");
+    addLine("[COMPLETE] Operation finished.", "red");
+    addLine("[SYSTEM] RESTART REQUIRED.", "red");
+    addLine(
+      "[WARNING] System changes pending restart.",
+      "yellow"
+    );
+
+    operation.textContent = "RESTART REQUIRED";
+    operation.style.color = "#ff4141";
+
+    restartMessage.style.display = "block";
+  }
+
+}, 180);
+
+</script>
+
+</body>
+</html>

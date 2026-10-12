@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <base href="https://cdn.jsdelivr.net/gh/abisdbest/classroom.google.com@45b2d69c626dc365753f6922d2c48c4075683ef5/drive.google.com/escape%20road/">
+
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Escape Road</title>
+
+    <link rel="stylesheet" href="TemplateData/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+        eruda.init();
+    </script>
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: black;
+        }
+
+        #unity-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #unity-canvas {
+            width: 100vw !important;
+            height: 100vh !important;
+            display: block;
+            background: black;
+        }
+
+        #unity-loading-bar {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #unity-footer {
+            display: none;
+        }
+
+        #unity-warning {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="unity-container" class="unity-desktop">
+
+        <canvas id="unity-canvas"
+                width="960"
+                height="600"
+                tabindex="-1"></canvas>
+
+        <div id="unity-loading-bar">
+
+            <div id="unity-logo"></div>
+
+            <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+            </div>
+
+        </div>
+
+        <div id="unity-warning"></div>
+
+        <div id="unity-footer">
+            <div id="unity-webgl-logo"></div>
+            <div id="unity-fullscreen-button"></div>
+            <div id="unity-build-title">Escape Road</div>
+        </div>
+
+    </div>
+
+
+    <!-- UNITY GAME SCRIPT -->
+    <script>
+
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+        var warningBanner = document.querySelector("#unity-warning");
+
+
+        function unityShowBanner(msg, type) {
+
+            function updateBannerVisibility() {
+
+                warningBanner.style.display =
+                    warningBanner.children.length ? 'block' : 'none';
+
+            }
+
+            var div = document.createElement('div');
+
+            div.innerHTML = msg;
+
+            warningBanner.appendChild(div);
+
+            if (type == 'error') {
+
+                div.style = 'background: red; padding: 10px;';
+
+            } else {
+
+                if (type == 'warning') {
+
+                    div.style = 'background: yellow; padding: 10px;';
+
+                }
+
+                setTimeout(function () {
+
+                    warningBanner.removeChild(div);
+
+                    updateBannerVisibility();
+
+                }, 5000);
+
+            }
+
+            updateBannerVisibility();
+
+        }
+
+
+        var buildUrl = "TemplateData";
+
+        var loaderUrl = buildUrl + "/loader.js";
+
+        var config = {
+
+            dataUrl: buildUrl + "/data.unityweb",
+
+            frameworkUrl: buildUrl + "/framework.js.unityweb",
+
+            codeUrl: buildUrl + "/wasm.unityweb",
+
+            streamingAssetsUrl: "StreamingAssets",
+
+            companyName: "1games.io",
+
+            productName: "Escape Road",
+
+            productVersion: "2.0"
+
+        };
+
+
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+
+            var meta = document.createElement('meta');
+
+            meta.name = 'viewport';
+
+            meta.content =
+                'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+
+            document.getElementsByTagName('head')[0].appendChild(meta);
+
+            container.className = "unity-mobile";
+
+            canvas.className = "unity-mobile";
+
+        }
+
+
+        loadingBar.style.display = "block";
+
+
+        var script = document.createElement("script");
+
+        script.src = loaderUrl;
+
+
+        script.onload = () => {
+
+            createUnityInstance(
+                canvas,
+                config,
+                (progress) => {
+
+                    progressBarFull.style.width =
+                        100 * progress + "%";
+
+                }
+            ).then((unityInstance) => {
+
+                window.unityInstance = unityInstance;
+
+                loadingBar.style.display = "none";
+
+                /*
+                 * Automatically resize the Unity canvas
+                 * to the browser window.
+                 */
+                function resizeGame() {
+
+                    canvas.style.width = window.innerWidth + "px";
+                    canvas.style.height = window.innerHeight + "px";
+
+                }
+
+                resizeGame();
+
+                window.addEventListener("resize", resizeGame);
+
+
+                /*
+                 * Fullscreen button
+                 */
+                if (fullscreenButton) {
+
+                    fullscreenButton.onclick = () => {
+
+                        unityInstance.SetFullscreen(1);
+
+                    };
+
+                }
+
+            }).catch((message) => {
+
+                alert(message);
+
+                console.error(message);
+
+            });
+
+        };
+
+
+        script.onerror = () => {
+
+            console.error("Could not load Unity loader:");
+
+            console.error(loaderUrl);
+
+        };
+
+
+        document.body.appendChild(script);
+
+    </script>
+
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics-compat.js"></script>
+
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+
+        import {
+            getAuth
+        } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+
+        const firebaseConfig = {
+
+            apiKey: "YOUR_API_KEY",
+
+            authDomain: "YOUR_AUTH_DOMAIN",
+
+            projectId: "YOUR_PROJECT_ID",
+
+            storageBucket: "YOUR_STORAGE_BUCKET",
+
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+
+            appId: "YOUR_APP_ID"
+
+        };
+
+
+        const app = initializeApp(firebaseConfig);
+
+        const auth = getAuth(app);
+
+    </script>
+
+</body>
+</html>

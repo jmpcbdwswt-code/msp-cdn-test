@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reasoning Assessment</title>
+<style>
+  * { box-sizing: border-box; }
+  :root{
+    --bg:#f4f6f8; --card:#fff; --text:#18202a; --muted:#6b7280;
+    --line:#dfe3e8; --accent:#2d5bff; --accent2:#173db7;
+    --good:#15803d; --bad:#b91c1c;
+  }
+  body{
+    margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif; background:var(--bg); color:var(--text);
+  }
+  .shell{max-width:900px;margin:0 auto;padding:32px 18px 60px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .mark{width:42px;height:42px;border-radius:12px;background:#18202a;color:white;
+    display:grid;place-items:center;font-weight:800;letter-spacing:-1px}
+  .brand h1{font-size:18px;margin:0}.brand p{font-size:12px;margin:2px 0 0;color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 10px 35px rgba(25,35,50,.06);padding:28px}
+  .hidden{display:none!important}
+  h2{font-size:30px;line-height:1.1;margin:0 0 12px;letter-spacing:-.8px}
+  .lead{color:var(--muted);font-size:16px;line-height:1.6;margin:0 0 24px}
+  .notice{background:#f7f8fa;border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+    color:#4b5563;font-size:13px;line-height:1.5;margin:18px 0}
+  .features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+  .feature{border:1px solid var(--line);border-radius:12px;padding:14px}
+  .feature b{display:block;font-size:14px;margin-bottom:4px}.feature span{font-size:12px;color:var(--muted)}
+  button{font:inherit}
+  .primary,.secondary{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}
+  .primary{background:var(--accent);color:white}.primary:hover{background:var(--accent2)}
+  .secondary{background:#eef1f5;color:#222}.secondary:hover{background:#e4e8ed}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+  .counter,.timer{font-size:13px;font-weight:700;color:#4b5563}
+  .progress{height:8px;background:#e9edf2;border-radius:999px;overflow:hidden;margin-bottom:28px}
+  .progress > div{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+  .category{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:800}
+  .question{font-size:23px;line-height:1.4;margin:10px 0 22px;font-weight:750}
+  .answers{display:grid;gap:10px}
+  .answer{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;
+    padding:15px 16px;cursor:pointer;transition:.15s;font-weight:600;color:#28313d}
+  .answer:hover{border-color:#9aa9d8;background:#fafbff}
+  .answer.selected{border:2px solid var(--accent);background:#eef3ff;padding:14px 15px}
+  .nav{display:flex;justify-content:space-between;gap:12px;margin-top:28px}
+  .result-head{text-align:center;padding:8px 0 20px}
+  .score-ring{width:150px;height:150px;border-radius:50%;margin:22px auto 12px;
+    display:grid;place-items:center;background:conic-gradient(var(--accent) 0deg,#e8ebef 0deg)}
+  .score-inner{width:122px;height:122px;border-radius:50%;background:white;display:grid;place-items:center}
+  .score-inner strong{font-size:34px;display:block}.score-inner span{font-size:11px;color:var(--muted)}
+  .range{font-size:24px;font-weight:800;margin:8px 0}.sub{color:var(--muted);font-size:13px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+  .stat strong{font-size:22px;display:block}.stat span{font-size:12px;color:var(--muted)}
+  .breakdown{margin-top:24px}.break-row{display:grid;grid-template-columns:150px 1fr 55px;gap:12px;
+    align-items:center;margin:12px 0;font-size:13px}
+  .bar{height:9px;background:#e8ebef;border-radius:999px;overflow:hidden}.bar div{height:100%;background:var(--accent)}
+  .footer-note{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;
+    color:var(--muted);line-height:1.6}
+  @media(max-width:650px){
+    .features,.stats{grid-template-columns:1fr}.card{padding:20px}.question{font-size:20px}
+    .break-row{grid-template-columns:105px 1fr 45px}.shell{padding-top:18px}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="brand">
+    <div class="mark">RA</div>
+    <div><h1>Reasoning Assessment</h1><p>Logic & problem-solving test</p></div>
+  </div>
+
+  <section id="startScreen" class="card">
+    <h2>Test your reasoning skills.</h2>
+    <p class="lead">A 52-question assessment covering several kinds of reasoning commonly found in aptitude and IQ-style tests.</p>
+    <div class="features">
+      <div class="feature"><b>52 questions</b><span>Multiple reasoning categories</span></div>
+      <div class="feature"><b>50 minutes</b><span>A steady but challenging pace</span></div>
+      <div class="feature"><b>Instant results</b><span>Overall and category breakdown</span></div>
+    </div>
+    <div class="notice"><b>Important:</b> This is an informal IQ-style reasoning test, not a standardized clinical IQ assessment. Its final range is only an estimate for entertainment and practice and should not be treated as a diagnosis or official IQ score.</div>
+    <button class="primary" onclick="startTest()">Begin assessment</button>
+  </section>
+
+  <section id="testScreen" class="card hidden">
+    <div class="topbar">
+      <div id="counter" class="counter">Question 1 of 52</div>
+      <div id="timer" class="timer">50:00</div>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div id="category" class="category"></div>
+    <div id="question" class="question"></div>
+    <div id="answers" class="answers"></div>
+    <div class="nav">
+      <button id="prevBtn" class="secondary" onclick="previousQuestion()">Previous</button>
+      <button id="nextBtn" class="primary" onclick="nextQuestion()">Next</button>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="card hidden">
+    <div class="result-head">
+      <div class="category">Assessment complete</div>
+      <h2 style="margin-top:8px">Your reasoning results</h2>
+      <div id="scoreRing" class="score-ring"><div class="score-inner"><div><strong id="percent">0%</strong><span>ACCURACY</span></div></div></div>
+      <div id="range" class="range"></div>
+      <div id="description" class="sub"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="correctStat">0/52</strong><span>Correct</span></div>
+      <div class="stat"><strong id="timeStat">0:00</strong><span>Time used</span></div>
+      <div class="stat"><strong id="answeredStat">0/52</strong><span>Answered</span></div>
+    </div>
+    <div class="breakdown">
+      <h3>Category breakdown</h3>
+      <div id="breakdown"></div>
+    </div>
+    <div class="footer-note">
+      The estimated range is generated from performance on this quiz and is deliberately broad. Real IQ tests are standardized on large samples, use age-based norms, controlled administration, and professionally validated scoring.
+    </div>
+    <div style="margin-top:22px"><button class="primary" onclick="restartTest()">Take it again</button></div>
+  </section>
+</div>
+
+<script>
+const originalQuestions = [
+ {c:"Number Sequences",q:"What number comes next? 4, 7, 13, 25, 49, ?",a:["81","95","97","99"],k:"97"},
+ {c:"Number Sequences",q:"What number comes next? 2, 5, 11, 23, 47, ?",a:["93","94","95","96"],k:"95"},
+ {c:"Number Sequences",q:"Find the missing number: 3, 8, 18, 38, 78, ?",a:["148","156","158","160"],k:"158"},
+ {c:"Number Sequences",q:"What comes next? 1, 2, 6, 24, 120, ?",a:["600","720","840","960"],k:"720"},
+ {c:"Number Sequences",q:"What number comes next? 7, 10, 16, 28, 52, ?",a:["76","88","96","100"],k:"100"},
+ {c:"Number Sequences",q:"What number comes next? 1, 4, 10, 22, 46, ?",a:["82","90","94","96"],k:"94"},
+ {c:"Number Sequences",q:"What number comes next? 2, 3, 5, 9, 17, 33, ?",a:["49","57","63","65"],k:"65"},
+ {c:"Number Sequences",q:"What number comes next? 100, 96, 88, 76, 60, ?",a:["36","40","42","44"],k:"40"},
+
+ {c:"Verbal Reasoning",q:"Blueprint is to building as recipe is to ____.",a:["kitchen","meal","ingredient","chef"],k:"meal"},
+ {c:"Verbal Reasoning",q:"Opaque is to transparent as reluctant is to ____.",a:["hesitant","willing","careful","uncertain"],k:"willing"},
+ {c:"Verbal Reasoning",q:"Which word is least like the others?",a:["infer","deduce","conclude","observe"],k:"observe"},
+ {c:"Verbal Reasoning",q:"Compass is to direction as thermometer is to ____.",a:["weather","temperature","mercury","measurement"],k:"temperature"},
+ {c:"Verbal Reasoning",q:"Seed is to tree as premise is to ____.",a:["argument","conclusion","question","evidence"],k:"conclusion"},
+ {c:"Verbal Reasoning",q:"Which pair has the closest relationship to 'chapter : book'?",a:["scene : play","letter : envelope","ink : pen","reader : library"],k:"scene : play"},
+ {c:"Verbal Reasoning",q:"If 'mitigate' means to make something less severe, which word is closest in meaning?",a:["intensify","reduce","predict","ignore"],k:"reduce"},
+
+ {c:"Deductive Logic",q:"All Kels are Rins. Some Rins are Daks. Which statement is definitely true?",a:["Some Kels are Daks","All Rins are Kels","All Kels are Rins","No Daks are Kels"],k:"All Kels are Rins"},
+ {c:"Deductive Logic",q:"No Vems are Lods. Every Tir is a Vem. Which must be true?",a:["No Tirs are Lods","All Lods are Tirs","Some Vems are Lods","No Vems are Tirs"],k:"No Tirs are Lods"},
+ {c:"Deductive Logic",q:"Ava finished before Ben but after Cole. Dana finished after Ben. Who finished first among these four?",a:["Ava","Ben","Cole","Dana"],k:"Cole"},
+ {c:"Deductive Logic",q:"Five boxes P, Q, R, S and T are stacked. P is above Q. R is below Q. T is above P. Which must be above R?",a:["Only Q","P and Q only","T, P and Q","Only T"],k:"T, P and Q"},
+ {c:"Deductive Logic",q:"If the alarm is armed, the red light is on. The red light is not on. What follows logically?",a:["The alarm is armed","The alarm is not armed","The light is broken","Nothing follows"],k:"The alarm is not armed"},
+ {c:"Deductive Logic",q:"Some Nors are Pels. No Pels are Gavs. Which must be true?",a:["Some Nors are not Gavs","No Nors are Gavs","All Nors are Pels","Some Gavs are Nors"],k:"Some Nors are not Gavs"},
+ {c:"Deductive Logic",q:"Every researcher is curious. Some curious people are musicians. Which conclusion is guaranteed?",a:["Some researchers are musicians","All musicians are researchers","Researchers are curious","No researchers are musicians"],k:"Researchers are curious"},
+ {c:"Deductive Logic",q:"Liam is older than Noah. Emma is younger than Noah but older than Mia. Which must be true?",a:["Liam is older than Mia","Mia is older than Liam","Emma is older than Liam","Noah is younger than Mia"],k:"Liam is older than Mia"},
+
+ {c:"Quantitative Reasoning",q:"A quantity is increased by 25% and becomes 90. What was the original quantity?",a:["67.5","70","72","75"],k:"72"},
+ {c:"Quantitative Reasoning",q:"Three machines make 18 parts in 12 minutes at equal constant rates. How many parts do 5 machines make in 20 minutes?",a:["30","40","45","50"],k:"50"},
+ {c:"Quantitative Reasoning",q:"A train covers the first half of a 120-mile trip at 40 mph and the second half at 60 mph. How long does the whole trip take?",a:["2 hours","2.4 hours","2.5 hours","3 hours"],k:"2.5 hours"},
+ {c:"Quantitative Reasoning",q:"If x + y = 14 and x − y = 4, what is x × y?",a:["40","42","45","48"],k:"45"},
+ {c:"Quantitative Reasoning",q:"A price is reduced by 20%, then the reduced price is increased by 20%. Compared with the original, the final price is:",a:["4% lower","the same","4% higher","8% lower"],k:"4% lower"},
+ {c:"Quantitative Reasoning",q:"The average of five numbers is 18. Four of them are 12, 17, 21 and 24. What is the fifth?",a:["14","16","18","20"],k:"16"},
+ {c:"Quantitative Reasoning",q:"A rectangle's length is 50% greater than its width. If its perimeter is 50, what is its area?",a:["120","135","150","160"],k:"150"},
+ {c:"Quantitative Reasoning",q:"If 2/3 of a number is 8 more than 1/2 of it, what is the number?",a:["36","42","48","54"],k:"48"},
+
+ {c:"Pattern Recognition",q:"What letter comes next? A, C, F, J, O, ?",a:["T","U","V","W"],k:"U"},
+ {c:"Pattern Recognition",q:"What letter comes next? Z, W, S, N, H, ?",a:["A","B","C","D"],k:"A"},
+ {c:"Pattern Recognition",q:"Complete the pattern: AB, DE, GH, JK, ?",a:["LM","MN","NO","OP"],k:"MN"},
+ {c:"Pattern Recognition",q:"A pattern repeats by adding one symbol to alternating groups: ●, ▲, ●●, ▲▲, ●●●, ?",a:["▲▲","▲▲▲","●●●●","▲▲▲▲"],k:"▲▲▲"},
+ {c:"Pattern Recognition",q:"What comes next? AZ, BY, CX, DW, ?",a:["EU","EV","FU","FV"],k:"EV"},
+ {c:"Pattern Recognition",q:"What comes next? 2A, 4C, 8F, 16J, ?",a:["24N","32N","32O","32P"],k:"32O"},
+ {c:"Pattern Recognition",q:"Which completes the pattern? A1, C2, F4, J8, O16, ?",a:["T32","U24","U32","V32"],k:"U32"},
+
+ {c:"Matrix Reasoning",q:"In each row the third number equals the first two combined by the same rule. Row 1: 2, 3 → 8. Row 2: 4, 5 → 24. Row 3: 6, 7 → ?",a:["42","46","48","54"],k:"48"},
+ {c:"Matrix Reasoning",q:"Find the missing entry. Row 1: 3, 5, 8. Row 2: 4, 7, 11. Row 3: 6, 9, ?",a:["13","14","15","16"],k:"15"},
+ {c:"Matrix Reasoning",q:"Find ?. Row 1: 2, 4, 16. Row 2: 3, 5, 30. Row 3: 4, 6, ?",a:["40","44","48","52"],k:"48"},
+ {c:"Matrix Reasoning",q:"Each row follows the same rule. 8, 4, 2 | 18, 6, 3 | 32, 8, ?",a:["2","3","4","6"],k:"4"},
+ {c:"Matrix Reasoning",q:"Find the missing value. 2, 6, 18 | 3, 9, 27 | 4, 12, ?",a:["32","36","40","48"],k:"36"},
+ {c:"Matrix Reasoning",q:"Rows follow the same operation: 7, 3 → 40; 9, 4 → 65; 11, 5 → ?",a:["76","86","96","106"],k:"96"},
+
+ {c:"Mixed Reasoning",q:"If yesterday was three days before Monday, what day is tomorrow?",a:["Friday","Saturday","Sunday","Monday"],k:"Saturday"},
+ {c:"Mixed Reasoning",q:"A cube has all 6 faces painted and is cut into 27 equal smaller cubes. How many small cubes have exactly two painted faces?",a:["8","12","16","20"],k:"12"},
+ {c:"Mixed Reasoning",q:"A clock gains 5 minutes every real hour. It is correct at noon. What will it display when the real time is 6:00 PM?",a:["6:25 PM","6:30 PM","6:35 PM","7:00 PM"],k:"6:30 PM"},
+ {c:"Mixed Reasoning",q:"In a race you pass the runner currently in second place. What position are you now in?",a:["First","Second","Third","Cannot know"],k:"Second"},
+ {c:"Mixed Reasoning",q:"A code maps CAT → DBU and FISH → GJTI. Using the same rule, BIRD becomes:",a:["CJSE","CJRD","DKSE","CJSF"],k:"CJSE"},
+ {c:"Mixed Reasoning",q:"A large cube is painted on every face, then cut into 64 equal cubes. How many small cubes have no paint?",a:["4","8","12","16"],k:"8"},
+ {c:"Mixed Reasoning",q:"Four cards show A, D, 4 and 7. Rule: 'If a card has a vowel on one side, it has an even number on the other.' Which cards must be turned to test the rule?",a:["A only","A and 4","A and 7","A, 4 and 7"],k:"A and 7"},
+ {c:"Mixed Reasoning",q:"Exactly one of these statements is true: (1) The key is in box A. (2) The key is not in box B. If the key must be in either A or B, where is it?",a:["Box A","Box B","Either box","Impossible to determine"],k:"Box B"}
+];
+
+let questions=[], answers=[], current=0, secondsLeft=3000, timerId=null, startSeconds=3000;
+
+function shuffle(arr){
+  const x=[...arr];
+  for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}
+  return x;
+}
+function startTest(){
+  questions=originalQuestions.map(x=>({...x,a:shuffle(x.a)}));
+  answers=new Array(questions.length).fill(null); current=0; secondsLeft=3000; startSeconds=3000;
+  document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("testScreen").classList.remove("hidden");
+  renderQuestion(); updateTimer();
+  clearInterval(timerId); timerId=setInterval(()=>{secondsLeft--;updateTimer();if(secondsLeft<=0)finishTest()},1000);
+}
+function renderQuestion(){
+  const item=questions[current];
+  document.getElementById("counter").textContent=`Question ${current+1} of ${questions.length}`;
+  document.getElementById("progressBar").style.width=`${((current+1)/questions.length)*100}%`;
+  document.getElementById("category").textContent=item.c;
+  document.getElementById("question").textContent=item.q;
+  const box=document.getElementById("answers"); box.innerHTML="";
+  item.a.forEach(choice=>{
+    const b=document.createElement("button"); b.className="answer"+(answers[current]===choice?" selected":"");
+    b.textContent=choice; b.onclick=()=>{answers[current]=choice;renderQuestion()}; box.appendChild(b);
+  });
+  document.getElementById("prevBtn").disabled=current===0;
+  document.getElementById("prevBtn").style.opacity=current===0?".45":"1";
+  document.getElementById("nextBtn").textContent=current===questions.length-1?"Finish":"Next";
+}
+function nextQuestion(){
+  if(current===questions.length-1){finishTest();return}
+  current++;renderQuestion();
+}
+function previousQuestion(){if(current>0){current--;renderQuestion()}}
+function updateTimer(){
+  const m=Math.floor(Math.max(0,secondsLeft)/60),s=Math.max(0,secondsLeft)%60;
+  document.getElementById("timer").textContent=`${m}:${String(s).padStart(2,"0")}`;
+}
+function finishTest(){
+  clearInterval(timerId);
+  document.getElementById("testScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.remove("hidden");
+  let correct=0, answered=answers.filter(x=>x!==null).length;
+  const cats={};
+  questions.forEach((q,i)=>{
+    if(!cats[q.c])cats[q.c]={right:0,total:0}; cats[q.c].total++;
+    if(answers[i]===q.k){correct++;cats[q.c].right++}
+  });
+  const pct=Math.round(correct/questions.length*100);
+  // Broad entertainment-only mapping; deliberately not presented as a real measured IQ.
+  let range,desc;
+  if(pct>=94){range="Very high reasoning performance";desc="Estimated IQ-style range: roughly 125+ on this quiz";}
+  else if(pct>=84){range="High reasoning performance";desc="Estimated IQ-style range: roughly 115–124 on this quiz";}
+  else if(pct>=70){range="Above-average performance";desc="Estimated IQ-style range: roughly 105–114 on this quiz";}
+  else if(pct>=50){range="Typical performance";desc="Estimated IQ-style range: roughly 90–104 on this quiz";}
+  else if(pct>=34){range="Developing performance";desc="Estimated IQ-style range: roughly 80–89 on this quiz";}
+  else {range="This test was challenging";desc="This quiz is too limited to make a useful lower-range estimate";}
+  document.getElementById("percent").textContent=pct+"%";
+  document.getElementById("scoreRing").style.background=`conic-gradient(var(--accent) ${pct*3.6}deg,#e8ebef 0deg)`;
+  document.getElementById("range").textContent=range;
+  document.getElementById("description").textContent=desc;
+  document.getElementById("correctStat").textContent=`${correct}/${questions.length}`;
+  document.getElementById("answeredStat").textContent=`${answered}/${questions.length}`;
+  const used=startSeconds-secondsLeft,m=Math.floor(used/60),s=used%60;
+  document.getElementById("timeStat").textContent=`${m}:${String(s).padStart(2,"0")}`;
+  const out=document.getElementById("breakdown");out.innerHTML="";
+  Object.entries(cats).forEach(([name,v])=>{
+    const p=Math.round(v.right/v.total*100);
+    out.innerHTML+=`<div class="break-row"><b>${name}</b><div class="bar"><div style="width:${p}%"></div></div><span>${v.right}/${v.total}</span></div>`;
+  });
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function restartTest(){
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("startScreen").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+</script>
+</body>
+</html>

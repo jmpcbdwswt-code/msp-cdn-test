@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cheese Cube — Zombies</title>
+  <meta name="description" content="Cheese Cube, a Black Ops III custom Zombies map rebuilt for the browser. Play solo or with up to three friends.">
+  <script>location.replace('zm_ccube.html' + location.search + location.hash);</script>
+  <style>html { background: #1b1810; color: #eee; font: 15px system-ui; } a { color: #ffe48b; }</style>
+</head>
+<body><p><a href="zm_ccube.html">Play Cheese Cube</a></p></body>
+</html>

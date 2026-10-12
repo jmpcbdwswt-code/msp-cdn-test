@@ -1,0 +1,1 @@
+var r;function o(){return r||=new Promise((n,t)=>{let e=document.createElement("script");e.src="/releases/beta-20261002-1/assets/lumin-sdk.js",e.onload=()=>window.Lumin.init({headless:!0}).then(()=>n(window.Lumin),t),e.onerror=()=>t(Error("The Lumin game service could not load.")),document.head.append(e)}).catch(n=>{throw r=null,n}),r}export{o as getLumin};

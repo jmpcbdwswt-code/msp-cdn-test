@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <base href="https://cdn.jsdelivr.net/gh/web-ports/baldi-mods@main/-3/">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <title>Unity Web Player | -3</title>
+
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #unity-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #unity-canvas {
+      position: absolute !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: #000;
+    }
+
+    #unity-loading-bar {
+      position: fixed;
+      z-index: 10;
+      left: 50%;
+      top: 55%;
+      transform: translate(-50%, -50%);
+    }
+
+    #loading-text {
+      position: fixed;
+      z-index: 20;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 48px;
+      font-family: cursive;
+      text-align: center;
+      margin: 0;
+      width: 100%;
+    }
+
+    #unity-warning {
+      position: fixed;
+      z-index: 30;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading-text">LOADING...</div>
+
+  <div id="unity-container">
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+
+    <div id="unity-loading-bar">
+      <div id="unity-logo"></div>
+
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+    </div>
+
+    <div id="unity-warning"></div>
+  </div>
+
+  <script>
+    var loadingText = document.querySelector("#loading-text");
+
+    let totalBytes = 0;
+    let loadedBytes = 0;
+
+    async function fetchWithProgress(url) {
+      const response = await fetch(url);
+      const reader = response.body.getReader();
+
+      let chunks = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        received += value.length;
+        loadedBytes += value.length;
+        chunks.push(value);
+
+        let mbDone = (loadedBytes / (1024 * 1024)).toFixed(2);
+        let mbTotal = "111.21";
+
+        loadingText.textContent =
+          `LOADING... ${mbDone} MB / ${mbTotal} MB`;
+      }
+
+      let fullBuffer = new Uint8Array(received);
+      let offset = 0;
+
+      for (let chunk of chunks) {
+        fullBuffer.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      return fullBuffer.buffer;
+    }
+
+    async function mergeFiles(fileParts, cacheKey) {
+      const cache = await caches.open("-3-cache");
+      const cachedResponse = await cache.match(cacheKey);
+
+      if (cachedResponse) {
+        const blob = await cachedResponse.blob();
+        return URL.createObjectURL(blob);
+      }
+
+      const buffers = await Promise.all(
+        fileParts.map(part => fetchWithProgress(part))
+      );
+
+      const mergedBlob = new Blob(buffers);
+      const response = new Response(mergedBlob);
+
+      await cache.put(cacheKey, response);
+
+      return URL.createObjectURL(mergedBlob);
+    }
+
+    function getParts(file, start, end) {
+      let parts = [];
+
+      for (let i = start; i <= end; i++) {
+        parts.push(file + ".part" + i);
+      }
+
+      return parts;
+    }
+
+    (async () => {
+      const [dataUrl, wasmUrl] = await Promise.all([
+        mergeFiles(
+          getParts("Build/minus3bog.data", 1, 5),
+          "minus3bog.data"
+        ),
+
+        mergeFiles(
+          getParts("Build/minus3bog.wasm", 1, 2),
+          "minus3bog.wasm"
+        )
+      ]);
+
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull =
+        document.querySelector("#unity-progress-bar-full");
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/minus3bog.loader.js";
+
+      var config = {
+        dataUrl: dataUrl,
+        frameworkUrl: "Build/minus3bog.framework.js",
+        codeUrl: wasmUrl,
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Mauzer2137",
+        productName: "-3",
+        productVersion: "3.-3"
+      };
+
+      loadingBar.style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = (100 * progress) + "%";
+
+        }).then((unityInstance) => {
+
+          loadingBar.style.display = "none";
+          loadingText.remove();
+
+          // Force game to fill the browser window.
+          canvas.style.width = "100vw";
+          canvas.style.height = "100vh";
+
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+
+      document.body.appendChild(script);
+    })();
+
+    // Keep the game fullscreen when the browser is resized.
+    window.addEventListener("resize", () => {
+      const canvas = document.querySelector("#unity-canvas");
+
+      canvas.style.width = "100vw";
+      canvas.style.height = "100vh";
+    });
+  </script>
+
+</body>
+</html>

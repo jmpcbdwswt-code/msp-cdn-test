@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+```
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Moto X3M 5 Pool Party</title>
+
+<link
+    rel="stylesheet"
+    href="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/css/app.css"
+    type="text/css"
+>
+
+<style>
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+    }
+
+    body {
+        position: fixed;
+        inset: 0;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    #content {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #orientation {
+        display: none;
+    }
+
+    #loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #000;
+        color: white;
+
+        font-family: Arial, sans-serif;
+        font-size: 20px;
+
+        pointer-events: none;
+    }
+
+    canvas {
+        display: block !important;
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<div id="content"></div>
+<div id="orientation"></div>
+<div id="loader">Loading ...</div>
+
+
+<!-- =====================================================
+     GOOGLE IMA
+====================================================== -->
+
+<script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+
+
+<!-- =====================================================
+     GAME LIBRARIES
+====================================================== -->
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/nape.min.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/jquery-3.1.1.min.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/easeljs-0.8.2.combined.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/bluebird.min.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/phaser.min.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/phaser-cachebuster.min.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/phaser-super-storage.min.js"></script>
+
+<script src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/assets/lib/dragonBones.min.js"></script>
+
+
+<!-- =====================================================
+     GAME MONETIZE SDK
+====================================================== -->
+
+<script>
+
+    window.SDK_OPTIONS = {
+        gameId: "mim4uot21hygwai6uek2u1t2ovb3lkzd",
+
+        onEvent: function(event) {
+
+            if (!event) return;
+
+            if (event.name === "SDK_GAME_START") {
+
+                document
+                    .getElementById("content")
+                    .dispatchEvent(
+                        new CustomEvent("SDK_GAME_START")
+                    );
+
+            }
+
+            if (event.name === "SDK_GAME_PAUSE") {
+
+                document
+                    .getElementById("content")
+                    .dispatchEvent(
+                        new CustomEvent("SDK_GAME_PAUSE")
+                    );
+
+            }
+
+        }
+    };
+
+</script>
+
+<script
+    id="gamemonetize-sdk"
+    src="https://cdn.jsdelivr.net/gh/st39/sdk@main/sdk.js">
+</script>
+
+
+<!-- =====================================================
+     MOTO X3M 5
+====================================================== -->
+
+<script
+    src="https://649025137-174029463385024710.preview.editmysite.com/uploads/b/139890129-767696982876512205/files/motox3m5.min.js">
+</script>
+
+
+<!-- =====================================================
+     CHROMEBOOK / MOBILE FIX
+====================================================== -->
+
+<script>
+
+    (function () {
+
+        function resizeGame() {
+
+            var content =
+                document.getElementById("content");
+
+            if (!content) return;
+
+            content.style.width =
+                window.innerWidth + "px";
+
+            content.style.height =
+                window.innerHeight + "px";
+
+            var canvases =
+                document.querySelectorAll("canvas");
+
+            for (var i = 0; i < canvases.length; i++) {
+
+                var canvas = canvases[i];
+
+                canvas.style.display = "block";
+
+                canvas.style.maxWidth =
+                    window.innerWidth + "px";
+
+                canvas.style.maxHeight =
+                    window.innerHeight + "px";
+
+                canvas.style.margin = "0 auto";
+            }
+
+        }
+
+
+        window.addEventListener(
+            "resize",
+            resizeGame,
+            false
+        );
+
+        window.addEventListener(
+            "orientationchange",
+            resizeGame,
+            false
+        );
+
+
+        /*
+         * Let the game initialize.
+         * We intentionally do NOT check whether
+         * motox3m5.min.js reported an error.
+         */
+
+        window.addEventListener("load", function () {
+
+            resizeGame();
+
+            setTimeout(function () {
+
+                resizeGame();
+
+                var loader =
+                    document.getElementById("loader");
+
+                if (loader) {
+
+                    loader.style.opacity = "0";
+
+                    setTimeout(function () {
+
+                        loader.style.display = "none";
+
+                    }, 400);
+
+                }
+
+            }, 2500);
+
+        });
+
+    })();
+
+</script>
+```
+
+</body>
+</html>

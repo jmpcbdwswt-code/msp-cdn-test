@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <base href="https://cdn.jsdelivr.net/gh/thirstygithub/web-ports@main/dbmb/">
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Don't Bite Me Bro! - Web</title>
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/thirstygithub/web-ports@main/dbmb/TemplateData/favicon.ico">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/thirstygithub/web-ports@main/dbmb/TemplateData/style.css">
+    <script src="https://cdn.jsdelivr.net/gh/thirstygithub/web-ports@main/dbmb/TemplateData/UnityProgress.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/thirstygithub/web-ports@main/dbmb/Build/UnityLoader.js"></script>
+    <script>
+      // The build's payload is one 36.8 MB file, above the 20 MB jsDelivr per-file
+      // cap, so it ships as numbered parts and is stitched into a blob that the
+      // loader is pointed at instead.
+      var MANIFEST = "Build/Build 9.json";
+      var SPLIT = { path: "chunks/build9.data.unityweb", count: 3 };
+
+      // jsDelivr answers a cold request for a large file with a transient 403 ("package
+      // size exceeded the configured limit of 50 MB") or an occasional 503, and the same
+      // url works on the next attempt, so every part gets a few tries.
+      var FETCH_ATTEMPTS = 4;
+      function fetchPart(url) {
+        var attempt = 0;
+        function tryOnce() {
+          attempt += 1;
+          return fetch(url).then(function (response) {
+            if (response.ok) return response;
+            throw new Error("Could not load " + url + " (HTTP " + response.status + ")");
+          }).catch(function (error) {
+            if (attempt >= FETCH_ATTEMPTS) throw error;
+            return new Promise(function (resolve) { setTimeout(resolve, 300 * attempt); }).then(tryOnce);
+          });
+        }
+        return tryOnce();
+      }
+
+      function loadSplit(spec) {
+        var blobs = [];
+        var index = 0;
+        return new Promise(function (resolve, reject) {
+          function step() {
+            if (index >= spec.count) {
+              resolve(new Blob(blobs, { type: "application/octet-stream" }));
+              return;
+            }
+            var n = String(++index);
+            while (n.length < 3) n = "0" + n;
+            var name = spec.path + ".part" + n;
+            fetchPart(name).then(function (response) {
+              return response.blob();
+            }).then(function (blob) {
+              blobs.push(blob);
+              step();
+            }, reject);
+          }
+          step();
+        });
+      }
+
+      function fail(error) {
+        console.error(error);
+        var box = document.createElement("div");
+        box.style.cssText = "position:fixed;inset:0;display:grid;place-items:center;padding:24px;" +
+          "background:#000;color:#fff;font:14px/1.6 system-ui,sans-serif;text-align:center";
+        box.textContent = error.message || String(error);
+        document.body.appendChild(box);
+      }
+
+      loadSplit(SPLIT).then(function (blob) {
+        var manifestUrl = new URL(MANIFEST, document.baseURI).href;
+        var manifestDir = manifestUrl.slice(0, manifestUrl.lastIndexOf("/") + 1);
+
+        UnityLoader.instantiate("gameContainer", MANIFEST, {
+          onProgress: UnityProgress,
+          Module: {
+            // The manifest only fills in values the Module does not already have, so
+            // this data url wins, and the loader's own relative-url rewriting has to
+            // let a blob url through untouched.
+            dataUrl: URL.createObjectURL(blob),
+            resolveBuildUrl: function (url) {
+              return /^(https?|ftp|file|blob|data):/.test(url) ? url : manifestDir + url;
+            }
+          }
+        });
+      }).catch(fail);
+    </script>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .webgl-content, #gameContainer {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      #gameContainer canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="webgl-content">
+      <div id="gameContainer"></div>
+    </div>
+  <style>.noah-wmk{position:fixed;bottom:20px;right:20px;z-index:999999;display:flex;flex-direction:column;align-items:center;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}.noah-wmk .wm-prefix{font-size:11px;font-weight:600;color:#d4d4d4;letter-spacing:0.02em;text-shadow:0 1px 3px rgba(0,0,0,0.8);margin-bottom:3px;white-space:nowrap;transition:color 0.2s}.noah-wmk img{display:block;height:34px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))}.noah-wmk:hover .wm-prefix{color:#f7931e}</style><a class="noah-wmk" href="https://noahstutoring.academy" target="_blank" rel="noopener"><span class="wm-prefix"></body>
+</html>

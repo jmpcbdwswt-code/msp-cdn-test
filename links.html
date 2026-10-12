@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Game Links</title>
+  <link rel="stylesheet" href="fx.css">
+  <script src="game-lists.js"></script>
+
+  <style>
+
+    * { box-sizing: border-box; }
+
+    body {
+
+      margin: 0;
+
+      padding: 30px 20px;
+
+      font-family: Arial, sans-serif;
+
+      background: #111;
+
+      color: white;
+
+    }
+
+    h1 { text-align: center; margin: 0 0 22px; }
+
+    .toolbar {
+
+      width: min(900px, 100%);
+
+      margin: 0 auto 20px;
+
+      display: flex;
+
+      gap: 10px;
+
+      flex-wrap: wrap;
+
+    }
+
+    #status {
+
+      width: min(900px, 100%);
+
+      margin: 0 auto 12px;
+
+      color: #aaa;
+
+    }
+
+    .links {
+
+      width: min(900px, 100%);
+
+      margin: auto;
+
+      display: grid;
+
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+      gap: 12px;
+
+    }
+
+    .game-card {
+
+      position: relative;
+
+      min-width: 0;
+
+    }
+
+    .game-card[hidden] { display: none; }
+
+    .game-link {
+
+      display: block;
+
+      min-height: 52px;
+
+      padding: 15px 48px 15px 15px;
+
+      background: #262626;
+
+      color: white;
+
+      text-decoration: none;
+
+      border: 1px solid #444;
+
+      border-radius: 8px;
+
+      overflow-wrap: anywhere;
+
+    }
+
+    .game-link:hover {
+
+      background: #383838;
+
+      border-color: #777;
+
+    }
+
+    .fav {
+
+      position: absolute;
+
+      right: 10px;
+
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      width: 32px;
+
+      height: 32px;
+
+      border: 0;
+
+      border-radius: 50%;
+
+      background: #171717;
+
+      color: white;
+
+      font-size: 20px;
+
+      cursor: pointer;
+
+    }
+
+    .game-card.is-fav .fav { color: #fbbf24; }
+
+    .empty {
+
+      width: min(900px, 100%);
+
+      margin: 35px auto;
+
+      text-align: center;
+
+      color: #aaa;
+
+    }
+
+
+    .game-link {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, background 0.2s, border-color 0.2s, box-shadow 0.25s;
+    }
+    .game-link::after {
+      content: "";
+      position: absolute;
+      top: -30%;
+      bottom: -30%;
+      left: 105%;
+      width: 5px;
+      background: #fff;
+      box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.85), 0 0 26px 10px rgba(255, 255, 255, 0.4);
+      transform: skewX(-24deg);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .game-card:hover .game-link {
+      transform: translateY(-3px) scale(1.02);
+      border-color: #a855f7;
+      box-shadow: 0 10px 24px rgba(168, 85, 247, 0.35);
+    }
+    .game-card:hover .game-link::after { animation: link-glint 0.75s ease-out; }
+    .game-card .fav { transition: transform 0.2s ease, color 0.15s; }
+    .game-card:hover .fav { transform: translateY(calc(-50% - 3px)); }
+    .game-card .fav:hover { transform: translateY(-50%) scale(1.2) rotate(72deg); }
+    @keyframes link-glint {
+      0% { left: 105%; opacity: 1; }
+      85% { opacity: 1; }
+      100% { left: -15%; opacity: 0; }
+    }
+  </style>
+
+</head>
+
+<body data-fx-nav>
+  <nav id="side-nav" aria-label="Site menu">
+    <button id="nav-toggle" class="nav-row" type="button" aria-label="Close menu" aria-expanded="true" aria-controls="side-nav" title="Menu">
+      <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
+      <span class="nav-label">Close menu</span>
+    </button>
+    <div class="nav-sep"></div>
+    <ul class="nav-list">
+      <li><a class="nav-row" href="index.html?open=announce" data-nav="announce" title="Changes &amp; Announcements"><span class="nav-ico" aria-hidden="true">&#128226;</span><span class="nav-label">Changes &amp; Announcements</span></a></li>
+      <li><button class="nav-row is-on" type="button" data-nav="all" title="Games"><span class="nav-ico" aria-hidden="true">&#127918;</span><span class="nav-label">Games</span></button></li>
+      <li><button class="nav-row" type="button" data-nav="new" title="New Games"><span class="nav-ico" aria-hidden="true">&#127381;</span><span class="nav-label">New Games</span></button></li>
+      <li><button class="nav-row" type="button" data-nav="fav" title="Favorites"><span class="nav-ico" aria-hidden="true">&#11088;</span><span class="nav-label">Favorites <span id="favCount"></span></span></button></li>
+      <li><a class="nav-row" href="comments.html" title="Comments"><span class="nav-ico" aria-hidden="true">&#128172;</span><span class="nav-label">Comments</span></a></li>
+      <li><button class="nav-row" type="button" data-nav="fnf" title="FnF Games"><span class="nav-ico" aria-hidden="true">&#127925;</span><span class="nav-label">FnF Games</span></button></li>
+      <li><button class="nav-row" type="button" data-nav="fnaf" title="FNAF Games"><span class="nav-ico" aria-hidden="true">&#128059;</span><span class="nav-label">FNAF Games</span></button></li>
+      <li><button class="nav-row" type="button" data-nav="clicker" title="Clicker Games"><span class="nav-ico" aria-hidden="true">&#128070;</span><span class="nav-label">Clicker Games</span></button></li>
+      <li><button class="nav-row" type="button" data-nav="stickman" title="Stickman Games"><span class="nav-ico" aria-hidden="true">&#127939;</span><span class="nav-label">Stickman Games</span></button></li>
+    </ul>
+  </nav>
+  <script src="fx.js"></script>
+
+
+  <h1>Games</h1>
+
+
+
+  <div class="toolbar fx-search">
+    <input id="search" type="search" placeholder="Search games (press /)" autocomplete="off" aria-label="Search games">
+  </div>
+
+
+
+  <p id="status"></p>
+
+
+
+  <div class="links" id="games">
+            <div class="game-card" data-name="panic button" data-href="...">
+        <a class="game-link" href="...">1. Panic button</a>
+        <button class="fav" type="button" aria-label="Favorite Panic button">☆</button>
+      </div>
+      <div class="game-card" data-name="owl cant sleep (fan-made)" data-href="OwlCantSleep.html">
+        <a class="game-link" href="OwlCantSleep.html">2. Owl Cant Sleep (Fan-made)</a>
+        <button class="fav" type="button" aria-label="Favorite Owl Cant Sleep (Fan-made)">☆</button>
+      </div>
+      <div class="game-card" data-name="fake virus.exe downloading screen" data-href="virus.exe.html">
+        <a class="game-link" href="virus.exe.html">3. Fake virus.exe downloading screen</a>
+        <button class="fav" type="button" aria-label="Favorite Fake virus.exe downloading screen">☆</button>
+      </div>
+      <div class="game-card" data-name="roof top sniper" data-href="rooftopsnipers.html">
+        <a class="game-link" href="rooftopsnipers.html">4. Roof Top Sniper</a>
+        <button class="fav" type="button" aria-label="Favorite Roof Top Sniper">☆</button>
+      </div>
+      <div class="game-card" data-name="roof top snipers 2" data-href="Roof2.html">
+        <a class="game-link" href="Roof2.html">5. Roof Top Snipers 2</a>
+        <button class="fav" type="button" aria-label="Favorite Roof Top Snipers 2">☆</button>
+      </div>
+      <div class="game-card" data-name="baldi basics" data-href="Baldibasics.html">
+        <a class="game-link" href="Baldibasics.html">6. Baldi Basics</a>
+        <button class="fav" type="button" aria-label="Favorite Baldi Basics">☆</button>
+      </div>
+      <div class="game-card" data-name="geometry dash lite" data-href="GeometryDash.html">
+        <a class="game-link" href="GeometryDash.html">7. Geometry Dash Lite</a>
+        <button class="fav" type="button" aria-label="Favorite Geometry Dash Lite">☆</button>
+      </div>
+      <div class="game-card" data-name="backrooms" data-href="BackRooms.html">
+        <a class="game-link" href="BackRooms.html">8. Backrooms</a>
+        <button class="fav" type="button" aria-label="Favorite Backrooms">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf world" data-href="Fnafworld.html">
+        <a class="game-link" href="Fnafworld.html">9. Fnaf World</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf World">☆</button>
+      </div>
+      <div class="game-card" data-name="minecraft" data-href="Minecraft.html">
+        <a class="game-link" href="Minecraft.html">10. Minecraft</a>
+        <button class="fav" type="button" aria-label="Favorite Minecraft">☆</button>
+      </div>
+      <div class="game-card" data-name="cookie clicker" data-href="cookie.html">
+        <a class="game-link" href="cookie.html">11. Cookie Clicker</a>
+        <button class="fav" type="button" aria-label="Favorite Cookie Clicker">☆</button>
+      </div>
+      <div class="game-card" data-name="friday night funkin" data-href="Fridaynightfunkin.html">
+        <a class="game-link" href="Fridaynightfunkin.html">12. Friday Night Funkin</a>
+        <button class="fav" type="button" aria-label="Favorite Friday Night Funkin">☆</button>
+      </div>
+      <div class="game-card" data-name="ddlc (horror)" data-href="Doki.html">
+        <a class="game-link" href="Doki.html">13. DDLC (Horror)</a>
+        <button class="fav" type="button" aria-label="Favorite DDLC (Horror)">☆</button>
+      </div>
+      <div class="game-card" data-name="granny" data-href="Granny.html">
+        <a class="game-link" href="Granny.html">14. Granny</a>
+        <button class="fav" type="button" aria-label="Favorite Granny">☆</button>
+      </div>
+      <div class="game-card" data-name="granny 2" data-href="Granny2.html">
+        <a class="game-link" href="Granny2.html">15. Granny 2</a>
+        <button class="fav" type="button" aria-label="Favorite Granny 2">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at freddy&#x27;s" data-href="Fnaf.html">
+        <a class="game-link" href="Fnaf.html">16. Five Nights At Freddy&#x27;s</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights At Freddy&#x27;s">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at freddy 2" data-href="Fnaf2.html">
+        <a class="game-link" href="Fnaf2.html">17. Five Nights At Freddy 2</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights At Freddy 2">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at freddy 3" data-href="Fnaf3.html">
+        <a class="game-link" href="Fnaf3.html">18. Five Nights At Freddy 3</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights At Freddy 3">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at freddy 4" data-href="Fnaf4.html">
+        <a class="game-link" href="Fnaf4.html">19. Five Nights At Freddy 4</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights At Freddy 4">☆</button>
+      </div>
+      <div class="game-card" data-name="sister location" data-href="SL.html">
+        <a class="game-link" href="SL.html">20. Sister Location</a>
+        <button class="fav" type="button" aria-label="Favorite Sister Location">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf pizzaria simulator" data-href="Pizzaria.html">
+        <a class="game-link" href="Pizzaria.html">21. Fnaf Pizzaria Simulator</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf Pizzaria Simulator">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf ucn" data-href="FnafUCN.html">
+        <a class="game-link" href="FnafUCN.html">22. Fnaf UCN</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf UCN">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf nights at candy&#x27;s" data-href="Candy.html">
+        <a class="game-link" href="Candy.html">23. Fnaf Nights At Candy&#x27;s</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf Nights At Candy&#x27;s">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf nights at candy 2" data-href="Candy2.html">
+        <a class="game-link" href="Candy2.html">24. Fnaf Nights At Candy 2</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf Nights At Candy 2">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf at epsteins" data-href="FnafE.html">
+        <a class="game-link" href="FnafE.html">25. Fnaf at Epsteins</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf at Epsteins">☆</button>
+      </div>
+      <div class="game-card" data-name="buckshot roulette" data-href="Buckshot.html">
+        <a class="game-link" href="Buckshot.html">26. BuckShot Roulette</a>
+        <button class="fav" type="button" aria-label="Favorite BuckShot Roulette">☆</button>
+      </div>
+      <div class="game-card" data-name="pvz 2" data-href="PlantsvsZombies2.html">
+        <a class="game-link" href="PlantsvsZombies2.html">27. PVZ 2</a>
+        <button class="fav" type="button" aria-label="Favorite PVZ 2">☆</button>
+      </div>
+      <div class="game-card" data-name="slope 3" data-href="Slope3.html">
+        <a class="game-link" href="Slope3.html">28. Slope 3</a>
+        <button class="fav" type="button" aria-label="Favorite Slope 3">☆</button>
+      </div>
+      <div class="game-card" data-name="steal a brainrot" data-href="SAB.html">
+        <a class="game-link" href="SAB.html">29. Steal A Brainrot</a>
+        <button class="fav" type="button" aria-label="Favorite Steal A Brainrot">☆</button>
+      </div>
+      <div class="game-card" data-name="grow a garden" data-href="GAG.html">
+        <a class="game-link" href="GAG.html">30. Grow A Garden</a>
+        <button class="fav" type="button" aria-label="Favorite Grow A Garden">☆</button>
+      </div>
+      <div class="game-card" data-name="bitlife" data-href="Bit.html">
+        <a class="game-link" href="Bit.html">31. Bitlife</a>
+        <button class="fav" type="button" aria-label="Favorite Bitlife">☆</button>
+      </div>
+      <div class="game-card" data-name="bad piggies" data-href="BadPiggies.html">
+        <a class="game-link" href="BadPiggies.html">32. Bad Piggies</a>
+        <button class="fav" type="button" aria-label="Favorite Bad Piggies">☆</button>
+      </div>
+      <div class="game-card" data-name="angry birds" data-href="AngryBirds.html">
+        <a class="game-link" href="AngryBirds.html">33. Angry Birds</a>
+        <button class="fav" type="button" aria-label="Favorite Angry Birds">☆</button>
+      </div>
+      <div class="game-card" data-name="intellisphere" data-href="Intellisphere.html">
+        <a class="game-link" href="Intellisphere.html">34. Intellisphere</a>
+        <button class="fav" type="button" aria-label="Favorite Intellisphere">☆</button>
+      </div>
+      <div class="game-card" data-name="ink game" data-href="InkGame.html">
+        <a class="game-link" href="InkGame.html">35. Ink Game</a>
+        <button class="fav" type="button" aria-label="Favorite Ink Game">☆</button>
+      </div>
+      <div class="game-card" data-name="idle breakout" data-href="IdleBreakout.html">
+        <a class="game-link" href="IdleBreakout.html">36. Idle Breakout</a>
+        <button class="fav" type="button" aria-label="Favorite Idle Breakout">☆</button>
+      </div>
+      <div class="game-card" data-name="skin walker (horror)" data-href="SkinWalker.html">
+        <a class="game-link" href="SkinWalker.html">37. Skin Walker (Horror)</a>
+        <button class="fav" type="button" aria-label="Favorite Skin Walker (Horror)">☆</button>
+      </div>
+      <div class="game-card" data-name="slither.io" data-href="Slither.html">
+        <a class="game-link" href="Slither.html">38. Slither.io</a>
+        <button class="fav" type="button" aria-label="Favorite Slither.io">☆</button>
+      </div>
+      <div class="game-card" data-name="snow rider" data-href="SnowRider.html">
+        <a class="game-link" href="SnowRider.html">39. Snow Rider</a>
+        <button class="fav" type="button" aria-label="Favorite Snow Rider">☆</button>
+      </div>
+      <div class="game-card" data-name="rag doll archers" data-href="RagDollArcher.html">
+        <a class="game-link" href="RagDollArcher.html">40. Rag Doll Archers</a>
+        <button class="fav" type="button" aria-label="Favorite Rag Doll Archers">☆</button>
+      </div>
+      <div class="game-card" data-name="escape road" data-href="EscapeRoad.html">
+        <a class="game-link" href="EscapeRoad.html">41. Escape Road</a>
+        <button class="fav" type="button" aria-label="Favorite Escape Road">☆</button>
+      </div>
+      <div class="game-card" data-name="deltarune ch 1-4" data-href="Deltarune.html">
+        <a class="game-link" href="Deltarune.html">42. Deltarune ch 1-4</a>
+        <button class="fav" type="button" aria-label="Favorite Deltarune ch 1-4">☆</button>
+      </div>
+      <div class="game-card" data-name="undertale yellow" data-href="Undertaleyellow.html">
+        <a class="game-link" href="Undertaleyellow.html">43. Undertale Yellow</a>
+        <button class="fav" type="button" aria-label="Favorite Undertale Yellow">☆</button>
+      </div>
+      <div class="game-card" data-name="basket ball bros" data-href="BasketBallBros.html">
+        <a class="game-link" href="BasketBallBros.html">44. Basket Ball Bros</a>
+        <button class="fav" type="button" aria-label="Favorite Basket Ball Bros">☆</button>
+      </div>
+      <div class="game-card" data-name="get away shootout" data-href="Shootout.html">
+        <a class="game-link" href="Shootout.html">45. Get Away Shootout</a>
+        <button class="fav" type="button" aria-label="Favorite Get Away Shootout">☆</button>
+      </div>
+      <div class="game-card" data-name="yume nikki" data-href="YumeNikki.html">
+        <a class="game-link" href="YumeNikki.html">46. Yume Nikki</a>
+        <button class="fav" type="button" aria-label="Favorite Yume Nikki">☆</button>
+      </div>
+      <div class="game-card" data-name="among us" data-href="Among.html">
+        <a class="game-link" href="Among.html">47. Among Us</a>
+        <button class="fav" type="button" aria-label="Favorite Among Us">☆</button>
+      </div>
+      <div class="game-card" data-name="12 mini battles" data-href="12mini.html">
+        <a class="game-link" href="12mini.html">48. 12 Mini Battles</a>
+        <button class="fav" type="button" aria-label="Favorite 12 Mini Battles">☆</button>
+      </div>
+      <div class="game-card" data-name="stack dash" data-href="Stacky.html">
+        <a class="game-link" href="Stacky.html">49. Stack Dash</a>
+        <button class="fav" type="button" aria-label="Favorite Stack Dash">☆</button>
+      </div>
+      <div class="game-card" data-name="basketball stars" data-href="BasketBallStars.html">
+        <a class="game-link" href="BasketBallStars.html">50. BasketBall Stars</a>
+        <button class="fav" type="button" aria-label="Favorite BasketBall Stars">☆</button>
+      </div>
+      <div class="game-card" data-name="10 minutes until dawn" data-href="10MinutesUntilDawn.html">
+        <a class="game-link" href="10MinutesUntilDawn.html">51. 10 Minutes Until Dawn</a>
+        <button class="fav" type="button" aria-label="Favorite 10 Minutes Until Dawn">☆</button>
+      </div>
+      <div class="game-card" data-name="tomb of the mask" data-href="PizelMaze.html">
+        <a class="game-link" href="PizelMaze.html">52. Tomb Of The Mask</a>
+        <button class="fav" type="button" aria-label="Favorite Tomb Of The Mask">☆</button>
+      </div>
+      <div class="game-card" data-name="retro bowl" data-href="retrobowl.html">
+        <a class="game-link" href="retrobowl.html">53. Retro Bowl</a>
+        <button class="fav" type="button" aria-label="Favorite Retro Bowl">☆</button>
+      </div>
+      <div class="game-card" data-name="retro bowl college" data-href="retrobowlcollege.html">
+        <a class="game-link" href="retrobowlcollege.html">54. Retro Bowl College</a>
+        <button class="fav" type="button" aria-label="Favorite Retro Bowl College">☆</button>
+      </div>
+      <div class="game-card" data-name="subway surfers" data-href="SubWaySurfer.html">
+        <a class="game-link" href="SubWaySurfer.html">55. SubWay Surfers</a>
+        <button class="fav" type="button" aria-label="Favorite SubWay Surfers">☆</button>
+      </div>
+      <div class="game-card" data-name="ultamite cds" data-href="Car.html">
+        <a class="game-link" href="Car.html">56. Ultamite CDS</a>
+        <button class="fav" type="button" aria-label="Favorite Ultamite CDS">☆</button>
+      </div>
+      <div class="game-card" data-name="trees hate you" data-href="TreesHateYou.html">
+        <a class="game-link" href="TreesHateYou.html">57. Trees Hate You</a>
+        <button class="fav" type="button" aria-label="Favorite Trees Hate You">☆</button>
+      </div>
+      <div class="game-card" data-name="snowball.io" data-href="SnowBall.html">
+        <a class="game-link" href="SnowBall.html">58. SnowBall.io</a>
+        <button class="fav" type="button" aria-label="Favorite SnowBall.io">☆</button>
+      </div>
+      <div class="game-card" data-name="1v1.lol" data-href="lvlio.html">
+        <a class="game-link" href="lvlio.html">59. 1v1.lol</a>
+        <button class="fav" type="button" aria-label="Favorite 1v1.lol">☆</button>
+      </div>
+      <div class="game-card" data-name="gun knight" data-href="GunKnight.html">
+        <a class="game-link" href="GunKnight.html">60. Gun Knight</a>
+        <button class="fav" type="button" aria-label="Favorite Gun Knight">☆</button>
+      </div>
+      <div class="game-card" data-name="cut the rope" data-href="CutTheRope.html">
+        <a class="game-link" href="CutTheRope.html">61. Cut The Rope</a>
+        <button class="fav" type="button" aria-label="Favorite Cut The Rope">☆</button>
+      </div>
+      <div class="game-card" data-name="fireboy &amp; watergirl 2" data-href="FireBoyAndWaterGirl.html">
+        <a class="game-link" href="FireBoyAndWaterGirl.html">62. FireBoy &amp; WaterGirl 2</a>
+        <button class="fav" type="button" aria-label="Favorite FireBoy &amp; WaterGirl 2">☆</button>
+      </div>
+      <div class="game-card" data-name="fireboy &amp; watergirl 3" data-href="FireBoyAndWaterGirl3.html">
+        <a class="game-link" href="FireBoyAndWaterGirl3.html">63. FireBoy &amp; WaterGirl 3</a>
+        <button class="fav" type="button" aria-label="Favorite FireBoy &amp; WaterGirl 3">☆</button>
+      </div>
+      <div class="game-card" data-name="fruit ninja" data-href="FruitNinja.html">
+        <a class="game-link" href="FruitNinja.html">64. Fruit Ninja</a>
+        <button class="fav" type="button" aria-label="Favorite Fruit Ninja">☆</button>
+      </div>
+      <div class="game-card" data-name="moto x3m" data-href="MotoX3M.html">
+        <a class="game-link" href="MotoX3M.html">65. Moto X3M</a>
+        <button class="fav" type="button" aria-label="Favorite Moto X3M">☆</button>
+      </div>
+      <div class="game-card" data-name="moto x3m 2" data-href="MotoX3M2.html">
+        <a class="game-link" href="MotoX3M2.html">66. Moto X3M 2</a>
+        <button class="fav" type="button" aria-label="Favorite Moto X3M 2">☆</button>
+      </div>
+      <div class="game-card" data-name="moto x3m 3" data-href="MotoX3M3.html">
+        <a class="game-link" href="MotoX3M3.html">67. Moto X3M 3</a>
+        <button class="fav" type="button" aria-label="Favorite Moto X3M 3">☆</button>
+      </div>
+      <div class="game-card" data-name="moto x3m pool party" data-href="MotoX3MPoolParty.html">
+        <a class="game-link" href="MotoX3MPoolParty.html">68. Moto X3M Pool Party</a>
+        <button class="fav" type="button" aria-label="Favorite Moto X3M Pool Party">☆</button>
+      </div>
+      <div class="game-card" data-name="moto x3m spooky l" data-href="MotoX3MSpookyLand.html">
+        <a class="game-link" href="MotoX3MSpookyLand.html">69. Moto X3M Spooky L</a>
+        <button class="fav" type="button" aria-label="Favorite Moto X3M Spooky L">☆</button>
+      </div>
+      <div class="game-card" data-name="moto x3m winter" data-href="MotoX3MWinter.html">
+        <a class="game-link" href="MotoX3MWinter.html">70. Moto X3M Winter</a>
+        <button class="fav" type="button" aria-label="Favorite Moto X3M Winter">☆</button>
+      </div>
+      <div class="game-card" data-name="bloxorz" data-href="Block.html">
+        <a class="game-link" href="Block.html">71. Bloxorz</a>
+        <button class="fav" type="button" aria-label="Favorite Bloxorz">☆</button>
+      </div>
+      <div class="game-card" data-name="paper.io" data-href="Paperio.html">
+        <a class="game-link" href="Paperio.html">72. Paper.io</a>
+        <button class="fav" type="button" aria-label="Favorite Paper.io">☆</button>
+      </div>
+      <div class="game-card" data-name="run" data-href="Run.html">
+        <a class="game-link" href="Run.html">73. Run</a>
+        <button class="fav" type="button" aria-label="Favorite Run">☆</button>
+      </div>
+      <div class="game-card" data-name="drive mad" data-href="DriveMad.html">
+        <a class="game-link" href="DriveMad.html">74. Drive Mad</a>
+        <button class="fav" type="button" aria-label="Favorite Drive Mad">☆</button>
+      </div>
+      <div class="game-card" data-name="just one boss" data-href="JustOneBoss.html">
+        <a class="game-link" href="JustOneBoss.html">75. Just One Boss</a>
+        <button class="fav" type="button" aria-label="Favorite Just One Boss">☆</button>
+      </div>
+      <div class="game-card" data-name="undertale: last breath" data-href="UndertaleLastBreath.html">
+        <a class="game-link" href="UndertaleLastBreath.html">76. Undertale: Last Breath</a>
+        <button class="fav" type="button" aria-label="Favorite Undertale: Last Breath">☆</button>
+      </div>
+      <div class="game-card" data-name="survivor.io" data-href="Survivor.html">
+        <a class="game-link" href="Survivor.html">77. Survivor.io</a>
+        <button class="fav" type="button" aria-label="Favorite Survivor.io">☆</button>
+      </div>
+      <div class="game-card" data-name="brotato" data-href="Brotato.html">
+        <a class="game-link" href="Brotato.html">78. Brotato</a>
+        <button class="fav" type="button" aria-label="Favorite Brotato">☆</button>
+      </div>
+      <div class="game-card" data-name="run from foxy" data-href="FoxyRun.html">
+        <a class="game-link" href="FoxyRun.html">79. Run from Foxy</a>
+        <button class="fav" type="button" aria-label="Favorite Run from Foxy">☆</button>
+      </div>
+      <div class="game-card" data-name="sand box city" data-href="Sandboxcity.html">
+        <a class="game-link" href="Sandboxcity.html">80. Sand Box City</a>
+        <button class="fav" type="button" aria-label="Favorite Sand Box City">☆</button>
+      </div>
+      <div class="game-card" data-name="level devil" data-href="LevelDevil.html">
+        <a class="game-link" href="LevelDevil.html">81. Level Devil</a>
+        <button class="fav" type="button" aria-label="Favorite Level Devil">☆</button>
+      </div>
+      <div class="game-card" data-name="idle miner tycoon" data-href="IdleMinertycoon.html">
+        <a class="game-link" href="IdleMinertycoon.html">82. Idle Miner Tycoon</a>
+        <button class="fav" type="button" aria-label="Favorite Idle Miner Tycoon">☆</button>
+      </div>
+      <div class="game-card" data-name="epstein&#x27;s education" data-href="EpsteinEducation.html">
+        <a class="game-link" href="EpsteinEducation.html">83. Epstein&#x27;s Education</a>
+        <button class="fav" type="button" aria-label="Favorite Epstein&#x27;s Education">☆</button>
+      </div>
+      <div class="game-card" data-name="dan the man" data-href="DanTheMan.html">
+        <a class="game-link" href="DanTheMan.html">84. Dan The Man</a>
+        <button class="fav" type="button" aria-label="Favorite Dan The Man">☆</button>
+      </div>
+      <div class="game-card" data-name="grind craft" data-href="GrindCraft.html">
+        <a class="game-link" href="GrindCraft.html">85. Grind Craft</a>
+        <button class="fav" type="button" aria-label="Favorite Grind Craft">☆</button>
+      </div>
+      <div class="game-card" data-name="uno" data-href="Uno.html">
+        <a class="game-link" href="Uno.html">86. Uno</a>
+        <button class="fav" type="button" aria-label="Favorite Uno">☆</button>
+      </div>
+      <div class="game-card" data-name="2048" data-href="2048.html">
+        <a class="game-link" href="2048.html">87. 2048</a>
+        <button class="fav" type="button" aria-label="Favorite 2048">☆</button>
+      </div>
+      <div class="game-card" data-name="crazy cattle 3d" data-href="CrazyCattle.html">
+        <a class="game-link" href="CrazyCattle.html">88. Crazy Cattle 3D</a>
+        <button class="fav" type="button" aria-label="Favorite Crazy Cattle 3D">☆</button>
+      </div>
+      <div class="game-card" data-name="escape road 2" data-href="EscapeRoad2.html">
+        <a class="game-link" href="EscapeRoad2.html">89. Escape Road 2</a>
+        <button class="fav" type="button" aria-label="Favorite Escape Road 2">☆</button>
+      </div>
+      <div class="game-card" data-name="escape road 3" data-href="EscapeRoad3.html">
+        <a class="game-link" href="EscapeRoad3.html">90. Escape Road 3</a>
+        <button class="fav" type="button" aria-label="Favorite Escape Road 3">☆</button>
+      </div>
+      <div class="game-card" data-name="bendy &amp; the inc machine" data-href="Bendy.html">
+        <a class="game-link" href="Bendy.html">91. Bendy &amp; The Inc Machine</a>
+        <button class="fav" type="button" aria-label="Favorite Bendy &amp; The Inc Machine">☆</button>
+      </div>
+      <div class="game-card" data-name="crossy road" data-href="Crossy.html">
+        <a class="game-link" href="Crossy.html">92. Crossy Road</a>
+        <button class="fav" type="button" aria-label="Favorite Crossy Road">☆</button>
+      </div>
+      <div class="game-card" data-name="how to fish" data-href="Fish.html">
+        <a class="game-link" href="Fish.html">93. How To Fish</a>
+        <button class="fav" type="button" aria-label="Favorite How To Fish">☆</button>
+      </div>
+      <div class="game-card" data-name="undertale" data-href="Undertale.html">
+        <a class="game-link" href="Undertale.html">94. Undertale</a>
+        <button class="fav" type="button" aria-label="Favorite Undertale">☆</button>
+      </div>
+      <div class="game-card" data-name="drift hunters" data-href="Drift.html">
+        <a class="game-link" href="Drift.html">95. Drift Hunters</a>
+        <button class="fav" type="button" aria-label="Favorite Drift Hunters">☆</button>
+      </div>
+      <div class="game-card" data-name="superhot" data-href="Hot.html">
+        <a class="game-link" href="Hot.html">96. SuperHot</a>
+        <button class="fav" type="button" aria-label="Favorite SuperHot">☆</button>
+      </div>
+      <div class="game-card" data-name="gangbeast" data-href="Gang.html">
+        <a class="game-link" href="Gang.html">97. Gangbeast</a>
+        <button class="fav" type="button" aria-label="Favorite Gangbeast">☆</button>
+      </div>
+      <div class="game-card" data-name="cuphead" data-href="cuphead.html">
+        <a class="game-link" href="cuphead.html">98. CupHead</a>
+        <button class="fav" type="button" aria-label="Favorite CupHead">☆</button>
+      </div>
+      <div class="game-card" data-name="kick the buddy" data-href="KickTheBuddy.html">
+        <a class="game-link" href="KickTheBuddy.html">99. Kick The Buddy</a>
+        <button class="fav" type="button" aria-label="Favorite Kick The Buddy">☆</button>
+      </div>
+      <div class="game-card" data-name="clover pit" data-href="CloverPit.html">
+        <a class="game-link" href="CloverPit.html">100. Clover Pit</a>
+        <button class="fav" type="button" aria-label="Favorite Clover Pit">☆</button>
+      </div>
+      <div class="game-card" data-name="sonic 2" data-href="Sonic2.html">
+        <a class="game-link" href="Sonic2.html">101. Sonic 2</a>
+        <button class="fav" type="button" aria-label="Favorite Sonic 2">☆</button>
+      </div>
+      <div class="game-card" data-name="sonic 3" data-href="Sonic3.html">
+        <a class="game-link" href="Sonic3.html">102. Sonic 3</a>
+        <button class="fav" type="button" aria-label="Favorite Sonic 3">☆</button>
+      </div>
+      <div class="game-card" data-name="sonic cd" data-href="SonicCD.html">
+        <a class="game-link" href="SonicCD.html">103. Sonic CD</a>
+        <button class="fav" type="button" aria-label="Favorite Sonic CD">☆</button>
+      </div>
+      <div class="game-card" data-name="sonic.exe" data-href="SonicEXE.html">
+        <a class="game-link" href="SonicEXE.html">104. Sonic.EXE</a>
+        <button class="fav" type="button" aria-label="Favorite Sonic.EXE">☆</button>
+      </div>
+      <div class="game-card" data-name="stickman fight ragdoll" data-href="Stickfight.html">
+        <a class="game-link" href="Stickfight.html">105. Stickman Fight Ragdoll</a>
+        <button class="fav" type="button" aria-label="Favorite Stickman Fight Ragdoll">☆</button>
+      </div>
+      <div class="game-card" data-name="google feud" data-href="GoogleFeud.html">
+        <a class="game-link" href="GoogleFeud.html">106. Google Feud</a>
+        <button class="fav" type="button" aria-label="Favorite Google Feud">☆</button>
+      </div>
+      <div class="game-card" data-name="hollow knight" data-href="HollowKnight.html">
+        <a class="game-link" href="HollowKnight.html">107. Hollow Knight</a>
+        <button class="fav" type="button" aria-label="Favorite Hollow Knight">☆</button>
+      </div>
+      <div class="game-card" data-name="hollow knight: silksong" data-href="HollowKnightSilk.html">
+        <a class="game-link" href="HollowKnightSilk.html">108. Hollow Knight: Silksong</a>
+        <button class="fav" type="button" aria-label="Favorite Hollow Knight: Silksong">☆</button>
+      </div>
+      <div class="game-card" data-name="mario 64" data-href="Mario64.html">
+        <a class="game-link" href="Mario64.html">109. Mario 64</a>
+        <button class="fav" type="button" aria-label="Favorite Mario 64">☆</button>
+      </div>
+      <div class="game-card" data-name="dumb ways to die" data-href="Dumb.html">
+        <a class="game-link" href="Dumb.html">110. Dumb Ways To Die</a>
+        <button class="fav" type="button" aria-label="Favorite Dumb Ways To Die">☆</button>
+      </div>
+      <div class="game-card" data-name="basket random" data-href="BasketBallRandom.html">
+        <a class="game-link" href="BasketBallRandom.html">111. Basket Random</a>
+        <button class="fav" type="button" aria-label="Favorite Basket Random">☆</button>
+      </div>
+      <div class="game-card" data-name="volley random" data-href="VolleyRandom.html">
+        <a class="game-link" href="VolleyRandom.html">112. Volley Random</a>
+        <button class="fav" type="button" aria-label="Favorite Volley Random">☆</button>
+      </div>
+      <div class="game-card" data-name="soccer random" data-href="SoccerRandom.html">
+        <a class="game-link" href="SoccerRandom.html">113. Soccer Random</a>
+        <button class="fav" type="button" aria-label="Favorite Soccer Random">☆</button>
+      </div>
+      <div class="game-card" data-name="boxing random" data-href="BoxingRandom.html">
+        <a class="game-link" href="BoxingRandom.html">114. Boxing Random</a>
+        <button class="fav" type="button" aria-label="Favorite Boxing Random">☆</button>
+      </div>
+      <div class="game-card" data-name="tiny fishing" data-href="Tiny.html">
+        <a class="game-link" href="Tiny.html">115. Tiny Fishing</a>
+        <button class="fav" type="button" aria-label="Favorite Tiny Fishing">☆</button>
+      </div>
+      <div class="game-card" data-name="going balls" data-href="Balls.html">
+        <a class="game-link" href="Balls.html">116. Going Balls</a>
+        <button class="fav" type="button" aria-label="Favorite Going Balls">☆</button>
+      </div>
+      <div class="game-card" data-name="la madriguera" data-href="LaMadriguera.html">
+        <a class="game-link" href="LaMadriguera.html">117. La Madriguera</a>
+        <button class="fav" type="button" aria-label="Favorite La Madriguera">☆</button>
+      </div>
+      <div class="game-card" data-name="burrito bison" data-href="Bison.html">
+        <a class="game-link" href="Bison.html">118. Burrito Bison</a>
+        <button class="fav" type="button" aria-label="Favorite Burrito Bison">☆</button>
+      </div>
+      <div class="game-card" data-name="tag" data-href="Tag.html">
+        <a class="game-link" href="Tag.html">119. Tag</a>
+        <button class="fav" type="button" aria-label="Favorite Tag">☆</button>
+      </div>
+      <div class="game-card" data-name="side effects" data-href="Effect.html">
+        <a class="game-link" href="Effect.html">120. Side Effects</a>
+        <button class="fav" type="button" aria-label="Favorite Side Effects">☆</button>
+      </div>
+      <div class="game-card" data-name="ragdoll hit" data-href="RagHit.html">
+        <a class="game-link" href="RagHit.html">121. Ragdoll Hit</a>
+        <button class="fav" type="button" aria-label="Favorite Ragdoll Hit">☆</button>
+      </div>
+      <div class="game-card" data-name="candy crush" data-href="CandyCrush.html">
+        <a class="game-link" href="CandyCrush.html">122. Candy Crush</a>
+        <button class="fav" type="button" aria-label="Favorite Candy Crush">☆</button>
+      </div>
+      <div class="game-card" data-name="johnny trigger" data-href="Trigger.html">
+        <a class="game-link" href="Trigger.html">123. Johnny Trigger</a>
+        <button class="fav" type="button" aria-label="Favorite Johnny Trigger">☆</button>
+      </div>
+      <div class="game-card" data-name="bank robbery 2" data-href="Robbery2.html">
+        <a class="game-link" href="Robbery2.html">124. Bank Robbery 2</a>
+        <button class="fav" type="button" aria-label="Favorite Bank Robbery 2">☆</button>
+      </div>
+      <div class="game-card" data-name="omori" data-href="omori.html">
+        <a class="game-link" href="omori.html">125. OMORI</a>
+        <button class="fav" type="button" aria-label="Favorite OMORI">☆</button>
+      </div>
+      <div class="game-card" data-name="rocket league" data-href="Rocket.html">
+        <a class="game-link" href="Rocket.html">126. Rocket League</a>
+        <button class="fav" type="button" aria-label="Favorite Rocket League">☆</button>
+      </div>
+      <div class="game-card" data-name="shift at midnight" data-href="ShiftAtMidnight.html">
+        <a class="game-link" href="ShiftAtMidnight.html">127. Shift At Midnight</a>
+        <button class="fav" type="button" aria-label="Favorite Shift At Midnight">☆</button>
+      </div>
+      <div class="game-card" data-name="super flight" data-href="Flight.html">
+        <a class="game-link" href="Flight.html">128. Super Flight</a>
+        <button class="fav" type="button" aria-label="Favorite Super Flight">☆</button>
+      </div>
+      <div class="game-card" data-name="stickman hook" data-href="StickHook.html">
+        <a class="game-link" href="StickHook.html">129. Stickman Hook</a>
+        <button class="fav" type="button" aria-label="Favorite Stickman Hook">☆</button>
+      </div>
+      <div class="game-card" data-name="stickman clash" data-href="StickClash.html">
+        <a class="game-link" href="StickClash.html">130. Stickman Clash</a>
+        <button class="fav" type="button" aria-label="Favorite Stickman Clash">☆</button>
+      </div>
+      <div class="game-card" data-name="stick duels: the war" data-href="Stickwar.html">
+        <a class="game-link" href="Stickwar.html">131. Stick Duels: The War</a>
+        <button class="fav" type="button" aria-label="Favorite Stick Duels: The War">☆</button>
+      </div>
+      <div class="game-card" data-name="stickman gta city" data-href="Stickcity.html">
+        <a class="game-link" href="Stickcity.html">132. Stickman gta City</a>
+        <button class="fav" type="button" aria-label="Favorite Stickman gta City">☆</button>
+      </div>
+      <div class="game-card" data-name="stickman kombat 2d" data-href="StickKombat.html">
+        <a class="game-link" href="StickKombat.html">133. Stickman Kombat 2D</a>
+        <button class="fav" type="button" aria-label="Favorite Stickman Kombat 2D">☆</button>
+      </div>
+      <div class="game-card" data-name="tanuki sunset" data-href="TanukiSunset.html">
+        <a class="game-link" href="TanukiSunset.html">134. Tanuki Sunset</a>
+        <button class="fav" type="button" aria-label="Favorite Tanuki Sunset">☆</button>
+      </div>
+      <div class="game-card" data-name="slime rancher" data-href="Slimerancher.html">
+        <a class="game-link" href="Slimerancher.html">135. Slime Rancher</a>
+        <button class="fav" type="button" aria-label="Favorite Slime Rancher">☆</button>
+      </div>
+      <div class="game-card" data-name="yandere simulator" data-href="YandereSimulator.html">
+        <a class="game-link" href="YandereSimulator.html">136. Yandere Simulator</a>
+        <button class="fav" type="button" aria-label="Favorite Yandere Simulator">☆</button>
+      </div>
+      <div class="game-card" data-name="the world&#x27;s hardest game" data-href="WorldsHardestGame.html">
+        <a class="game-link" href="WorldsHardestGame.html">137. The World&#x27;s Hardest Game</a>
+        <button class="fav" type="button" aria-label="Favorite The World&#x27;s Hardest Game">☆</button>
+      </div>
+      <div class="game-card" data-name="the world&#x27;s hardest game 2" data-href="WorldsHardestGame2.html">
+        <a class="game-link" href="WorldsHardestGame2.html">138. The World&#x27;s Hardest Game 2</a>
+        <button class="fav" type="button" aria-label="Favorite The World&#x27;s Hardest Game 2">☆</button>
+      </div>
+      <div class="game-card" data-name="the world&#x27;s hardest game 3" data-href="WorldsHardestGame3.html">
+        <a class="game-link" href="WorldsHardestGame3.html">139. The World&#x27;s Hardest Game 3</a>
+        <button class="fav" type="button" aria-label="Favorite The World&#x27;s Hardest Game 3">☆</button>
+      </div>
+      <div class="game-card" data-name="the world&#x27;s hardest game 4" data-href="WorldsHardestGame4.html">
+        <a class="game-link" href="WorldsHardestGame4.html">140. The World&#x27;s Hardest Game 4</a>
+        <button class="fav" type="button" aria-label="Favorite The World&#x27;s Hardest Game 4">☆</button>
+      </div>
+      <div class="game-card" data-name="pokemon firered" data-href="PokemonFire.html">
+        <a class="game-link" href="PokemonFire.html">141. Pokemon FireRed</a>
+        <button class="fav" type="button" aria-label="Favorite Pokemon FireRed">☆</button>
+      </div>
+      <div class="game-card" data-name="pokemon leaf green" data-href="PokemonLeaf.html">
+        <a class="game-link" href="PokemonLeaf.html">142. Pokemon Leaf Green</a>
+        <button class="fav" type="button" aria-label="Favorite Pokemon Leaf Green">☆</button>
+      </div>
+      <div class="game-card" data-name="factory balls" data-href="factoryBalls.html">
+        <a class="game-link" href="factoryBalls.html">143. Factory Balls</a>
+        <button class="fav" type="button" aria-label="Favorite Factory Balls">☆</button>
+      </div>
+      <div class="game-card" data-name="factory balls 2" data-href="factoryBalls2.html">
+        <a class="game-link" href="factoryBalls2.html">144. Factory Balls 2</a>
+        <button class="fav" type="button" aria-label="Favorite Factory Balls 2">☆</button>
+      </div>
+      <div class="game-card" data-name="factory balls 3" data-href="factoryBalls3.html">
+        <a class="game-link" href="factoryBalls3.html">145. Factory Balls 3</a>
+        <button class="fav" type="button" aria-label="Favorite Factory Balls 3">☆</button>
+      </div>
+      <div class="game-card" data-name="factory balls 4" data-href="factoryBalls4.html">
+        <a class="game-link" href="factoryBalls4.html">146. Factory Balls 4</a>
+        <button class="fav" type="button" aria-label="Favorite Factory Balls 4">☆</button>
+      </div>
+      <div class="game-card" data-name="happy wheels (demo)" data-href="HappyWheels.html">
+        <a class="game-link" href="HappyWheels.html">147. Happy Wheels (DEMO)</a>
+        <button class="fav" type="button" aria-label="Favorite Happy Wheels (DEMO)">☆</button>
+      </div>
+      <div class="game-card" data-name="bow masters" data-href="BowMasters.html">
+        <a class="game-link" href="BowMasters.html">148. Bow Masters</a>
+        <button class="fav" type="button" aria-label="Favorite Bow Masters">☆</button>
+      </div>
+      <div class="game-card" data-name="bad parenting" data-href="BadParenting.html">
+        <a class="game-link" href="BadParenting.html">149. Bad Parenting</a>
+        <button class="fav" type="button" aria-label="Favorite Bad Parenting">☆</button>
+      </div>
+      <div class="game-card" data-name="blocky snakes" data-href="BlockySnakes.html">
+        <a class="game-link" href="BlockySnakes.html">150. Blocky Snakes</a>
+        <button class="fav" type="button" aria-label="Favorite Blocky Snakes">☆</button>
+      </div>
+      <div class="game-card" data-name="doge miner" data-href="DogeMiner.html">
+        <a class="game-link" href="DogeMiner.html">151. Doge Miner</a>
+        <button class="fav" type="button" aria-label="Favorite Doge Miner">☆</button>
+      </div>
+      <div class="game-card" data-name="doge miner 2" data-href="DogeMiner2.html">
+        <a class="game-link" href="DogeMiner2.html">152. Doge Miner 2</a>
+        <button class="fav" type="button" aria-label="Favorite Doge Miner 2">☆</button>
+      </div>
+      <div class="game-card" data-name="egg" data-href="Egg.html">
+        <a class="game-link" href="Egg.html">153. Egg</a>
+        <button class="fav" type="button" aria-label="Favorite Egg">☆</button>
+      </div>
+      <div class="game-card" data-name="elastic face" data-href="Elastic.html">
+        <a class="game-link" href="Elastic.html">154. Elastic Face</a>
+        <button class="fav" type="button" aria-label="Favorite Elastic Face">☆</button>
+      </div>
+      <div class="game-card" data-name="death run" data-href="deathRun.html">
+        <a class="game-link" href="deathRun.html">155. Death Run</a>
+        <button class="fav" type="button" aria-label="Favorite Death Run">☆</button>
+      </div>
+      <div class="game-card" data-name="the man from the window" data-href="window.html">
+        <a class="game-link" href="window.html">156. The Man From The Window</a>
+        <button class="fav" type="button" aria-label="Favorite The Man From The Window">☆</button>
+      </div>
+      <div class="game-card" data-name="gun spin" data-href="gunSpin.html">
+        <a class="game-link" href="gunSpin.html">157. Gun Spin</a>
+        <button class="fav" type="button" aria-label="Favorite Gun Spin">☆</button>
+      </div>
+      <div class="game-card" data-name="nazi zombies portable" data-href="NaziZombiesPortable.html">
+        <a class="game-link" href="NaziZombiesPortable.html">158. Nazi Zombies Portable</a>
+        <button class="fav" type="button" aria-label="Favorite Nazi Zombies Portable">☆</button>
+      </div>
+      <div class="game-card" data-name="unfair mario" data-href="Unfairmario.html">
+        <a class="game-link" href="Unfairmario.html">159. Unfair Mario</a>
+        <button class="fav" type="button" aria-label="Favorite Unfair Mario">☆</button>
+      </div>
+      <div class="game-card" data-name="block blast" data-href="BlockBlast.html">
+        <a class="game-link" href="BlockBlast.html">160. Block Blast</a>
+        <button class="fav" type="button" aria-label="Favorite Block Blast">☆</button>
+      </div>
+      <div class="game-card" data-name="battle karts" data-href="BattleKarts.html">
+        <a class="game-link" href="BattleKarts.html">161. Battle Karts</a>
+        <button class="fav" type="button" aria-label="Favorite Battle Karts">☆</button>
+      </div>
+      <div class="game-card" data-name="stick merge" data-href="StickMerge.html">
+        <a class="game-link" href="StickMerge.html">162. Stick Merge</a>
+        <button class="fav" type="button" aria-label="Favorite Stick Merge">☆</button>
+      </div>
+      <div class="game-card" data-name="peak" data-href="Peak.html">
+        <a class="game-link" href="Peak.html">163. Peak</a>
+        <button class="fav" type="button" aria-label="Favorite Peak">☆</button>
+      </div>
+      <div class="game-card" data-name="murder" data-href="Murder.html">
+        <a class="game-link" href="Murder.html">164. Murder</a>
+        <button class="fav" type="button" aria-label="Favorite Murder">☆</button>
+      </div>
+      <div class="game-card" data-name="laceys flash games" data-href="Flash.html">
+        <a class="game-link" href="Flash.html">165. Laceys Flash Games</a>
+        <button class="fav" type="button" aria-label="Favorite Laceys Flash Games">☆</button>
+      </div>
+      <div class="game-card" data-name="pizza tower" data-href="PizzaTower.html">
+        <a class="game-link" href="PizzaTower.html">166. Pizza Tower</a>
+        <button class="fav" type="button" aria-label="Favorite Pizza Tower">☆</button>
+      </div>
+      <div class="game-card" data-name="class of 09" data-href="09.html">
+        <a class="game-link" href="09.html">167. Class of 09</a>
+        <button class="fav" type="button" aria-label="Favorite Class of 09">☆</button>
+      </div>
+      <div class="game-card" data-name="strange rope police" data-href="StrangeRopePolice.html">
+        <a class="game-link" href="StrangeRopePolice.html">168. Strange Rope Police</a>
+        <button class="fav" type="button" aria-label="Favorite Strange Rope Police">☆</button>
+      </div>
+      <div class="game-card" data-name="sprunki" data-href="Sprunki.html">
+        <a class="game-link" href="Sprunki.html">169. Sprunki</a>
+        <button class="fav" type="button" aria-label="Favorite Sprunki">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s bakeria" data-href="Bake.html">
+        <a class="game-link" href="Bake.html">170. Papa&#x27;s Bakeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Bakeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s burgeria" data-href="Burgeria.html">
+        <a class="game-link" href="Burgeria.html">171. Papa&#x27;s Burgeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Burgeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s cheeseria" data-href="Papa&#x27;sCheeseria.html">
+        <a class="game-link" href="Papa&#x27;sCheeseria.html">172. Papa&#x27;s Cheeseria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Cheeseria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s cupcakeria" data-href="Papa&#x27;sCupcakeria.html">
+        <a class="game-link" href="Papa&#x27;sCupcakeria.html">173. Papa&#x27;s Cupcakeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Cupcakeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s donuteria" data-href="Papa&#x27;sDonuteria.html">
+        <a class="game-link" href="Papa&#x27;sDonuteria.html">174. Papa&#x27;s Donuteria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Donuteria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s hot doggeria" data-href="Papa&#x27;sHotDoggeria.html">
+        <a class="game-link" href="Papa&#x27;sHotDoggeria.html">175. Papa&#x27;s Hot Doggeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Hot Doggeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s pancakeria" data-href="Papa&#x27;sPancakeria.html">
+        <a class="game-link" href="Papa&#x27;sPancakeria.html">176. Papa&#x27;s Pancakeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Pancakeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s pastaria" data-href="Papa&#x27;sPastaria.html">
+        <a class="game-link" href="Papa&#x27;sPastaria.html">177. Papa&#x27;s Pastaria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Pastaria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s pizzeria" data-href="Papa&#x27;sPizzeria.html">
+        <a class="game-link" href="Papa&#x27;sPizzeria.html">178. Papa&#x27;s Pizzeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Pizzeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s scooperia" data-href="Papa&#x27;sScooperia.html">
+        <a class="game-link" href="Papa&#x27;sScooperia.html">179. Papa&#x27;s Scooperia</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Scooperia">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s sushiria" data-href="Papa&#x27;sSushiria.html">
+        <a class="game-link" href="Papa&#x27;sSushiria.html">180. Papa&#x27;s Sushiria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Sushiria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s taco mia" data-href="Papa&#x27;sTacomia.html">
+        <a class="game-link" href="Papa&#x27;sTacomia.html">181. Papa&#x27;s Taco mia</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Taco mia">☆</button>
+      </div>
+      <div class="game-card" data-name="papa&#x27;s wingeria" data-href="Papa&#x27;sWingeria.html">
+        <a class="game-link" href="Papa&#x27;sWingeria.html">182. Papa&#x27;s Wingeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa&#x27;s Wingeria">☆</button>
+      </div>
+      <div class="game-card" data-name="papa freezeria" data-href="papafreezeria.html">
+        <a class="game-link" href="papafreezeria.html">183. Papa Freezeria</a>
+        <button class="fav" type="button" aria-label="Favorite Papa Freezeria">☆</button>
+      </div>
+      <div class="game-card" data-name="slenderman: the 8 pages" data-href="SlendermanThe8Pages.html">
+        <a class="game-link" href="SlendermanThe8Pages.html">184. Slenderman: The 8 Pages</a>
+        <button class="fav" type="button" aria-label="Favorite Slenderman: The 8 Pages">☆</button>
+      </div>
+      <div class="game-card" data-name="btd1" data-href="BTD1.html">
+        <a class="game-link" href="BTD1.html">185. BTD1</a>
+        <button class="fav" type="button" aria-label="Favorite BTD1">☆</button>
+      </div>
+      <div class="game-card" data-name="btd2" data-href="BTD2.html">
+        <a class="game-link" href="BTD2.html">186. BTD2</a>
+        <button class="fav" type="button" aria-label="Favorite BTD2">☆</button>
+      </div>
+      <div class="game-card" data-name="btd3" data-href="BTD3.html">
+        <a class="game-link" href="BTD3.html">187. BTD3</a>
+        <button class="fav" type="button" aria-label="Favorite BTD3">☆</button>
+      </div>
+      <div class="game-card" data-name="btd4" data-href="BTD4.html">
+        <a class="game-link" href="BTD4.html">188. BTD4</a>
+        <button class="fav" type="button" aria-label="Favorite BTD4">☆</button>
+      </div>
+      <div class="game-card" data-name="btd5" data-href="BTD5.html">
+        <a class="game-link" href="BTD5.html">189. BTD5</a>
+        <button class="fav" type="button" aria-label="Favorite BTD5">☆</button>
+      </div>
+      <div class="game-card" data-name="balatro" data-href="Balatro.html">
+        <a class="game-link" href="Balatro.html">190. Balatro</a>
+        <button class="fav" type="button" aria-label="Favorite Balatro">☆</button>
+      </div>
+      <div class="game-card" data-name="bloodmoney" data-href="Bloodmoney.html">
+        <a class="game-link" href="Bloodmoney.html">191. Bloodmoney</a>
+        <button class="fav" type="button" aria-label="Favorite Bloodmoney">☆</button>
+      </div>
+      <div class="game-card" data-name="apple worm" data-href="Appleworm.html">
+        <a class="game-link" href="Appleworm.html">192. Apple Worm</a>
+        <button class="fav" type="button" aria-label="Favorite Apple Worm">☆</button>
+      </div>
+      <div class="game-card" data-name="little alchemy 2" data-href="LittleAlchemy2.html">
+        <a class="game-link" href="LittleAlchemy2.html">193. Little Alchemy 2</a>
+        <button class="fav" type="button" aria-label="Favorite Little Alchemy 2">☆</button>
+      </div>
+      <div class="game-card" data-name="bottle flip 3d" data-href="BottleFlip3d.html">
+        <a class="game-link" href="BottleFlip3d.html">194. Bottle Flip 3d</a>
+        <button class="fav" type="button" aria-label="Favorite Bottle Flip 3d">☆</button>
+      </div>
+      <div class="game-card" data-name="2-3-4 player games" data-href="2-3-4PlayerGames.html">
+        <a class="game-link" href="2-3-4PlayerGames.html">195. 2-3-4 Player Games</a>
+        <button class="fav" type="button" aria-label="Favorite 2-3-4 Player Games">☆</button>
+      </div>
+      <div class="game-card" data-name="the impossible quiz" data-href="TheImpossibleQuiz.html">
+        <a class="game-link" href="TheImpossibleQuiz.html">196. The Impossible Quiz</a>
+        <button class="fav" type="button" aria-label="Favorite The Impossible Quiz">☆</button>
+      </div>
+      <div class="game-card" data-name="adventure capitalist" data-href="AdventureCapitalist.html">
+        <a class="game-link" href="AdventureCapitalist.html">197. Adventure Capitalist</a>
+        <button class="fav" type="button" aria-label="Favorite Adventure Capitalist">☆</button>
+      </div>
+      <div class="game-card" data-name="only up" data-href="Onlyup.html">
+        <a class="game-link" href="Onlyup.html">198. Only Up</a>
+        <button class="fav" type="button" aria-label="Favorite Only Up">☆</button>
+      </div>
+      <div class="game-card" data-name="wheely" data-href="Wheely.html">
+        <a class="game-link" href="Wheely.html">199. Wheely</a>
+        <button class="fav" type="button" aria-label="Favorite Wheely">☆</button>
+      </div>
+      <div class="game-card" data-name="mom im sleeping" data-href="MomImSleeping.html">
+        <a class="game-link" href="MomImSleeping.html">200. Mom Im Sleeping</a>
+        <button class="fav" type="button" aria-label="Favorite Mom Im Sleeping">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf vs shucks v2" data-href="FNFvsShucksV2.html">
+        <a class="game-link" href="FNFvsShucksV2.html">201. FNF vs Shucks V2</a>
+        <button class="fav" type="button" aria-label="Favorite FNF vs Shucks V2">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf rewrite" data-href="FNFRewrite.html">
+        <a class="game-link" href="FNFRewrite.html">202. FNF Rewrite</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Rewrite">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf agoti" data-href="FNFAgoti.html">
+        <a class="game-link" href="FNFAgoti.html">203. FNF Agoti</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Agoti">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf black betrayal" data-href="FNFBlackBetrayal.html">
+        <a class="game-link" href="FNFBlackBetrayal.html">204. FNF Black Betrayal</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Black Betrayal">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf impostor v4" data-href="FNFImpostorV4.html">
+        <a class="game-link" href="FNFImpostorV4.html">205. FNF Impostor V4</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Impostor V4">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf indie cross" data-href="FNFIndieCross.html">
+        <a class="game-link" href="FNFIndieCross.html">206. FNF Indie Cross</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Indie Cross">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf mario madness" data-href="FNFMarioMadness.html">
+        <a class="game-link" href="FNFMarioMadness.html">207. FNF Mario Madness</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Mario Madness">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf sonic.exe" data-href="FNFSonic.exe.html">
+        <a class="game-link" href="FNFSonic.exe.html">208. FNF Sonic.exe</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Sonic.exe">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf pibby apocalypse" data-href="FNFPibbyApocalypse.html">
+        <a class="game-link" href="FNFPibbyApocalypse.html">209. FNF Pibby Apocalypse</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Pibby Apocalypse">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf - ben drowned" data-href="FNF-BenDrowned.html">
+        <a class="game-link" href="FNF-BenDrowned.html">210. FNF - Ben Drowned</a>
+        <button class="fav" type="button" aria-label="Favorite FNF - Ben Drowned">☆</button>
+      </div>
+      <div class="game-card" data-name="60 seconds" data-href="60Seconds.html">
+        <a class="game-link" href="60Seconds.html">211. 60 Seconds</a>
+        <button class="fav" type="button" aria-label="Favorite 60 Seconds">☆</button>
+      </div>
+      <div class="game-card" data-name="-3" data-href="-3.html">
+        <a class="game-link" href="-3.html">212. -3</a>
+        <button class="fav" type="button" aria-label="Favorite -3">☆</button>
+      </div>
+      <div class="game-card" data-name="-b" data-href="-b.html">
+        <a class="game-link" href="-b.html">213. -b</a>
+        <button class="fav" type="button" aria-label="Favorite -b">☆</button>
+      </div>
+      <div class="game-card" data-name="2doom" data-href="2Doom.html">
+        <a class="game-link" href="2Doom.html">214. 2Doom</a>
+        <button class="fav" type="button" aria-label="Favorite 2Doom">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at shrek&#x27;s hotel" data-href="FiveNightsAtShrek&#x27;sHotel.html">
+        <a class="game-link" href="FiveNightsAtShrek&#x27;sHotel.html">215. Five Nights At Shrek&#x27;s Hotel</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights At Shrek&#x27;s Hotel">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at yoshi&#x27;s" data-href="FiveNightsAtYoshi&#x27;s.html">
+        <a class="game-link" href="FiveNightsAtYoshi&#x27;s.html">216. Five Nights At Yoshi&#x27;s</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights At Yoshi&#x27;s">☆</button>
+      </div>
+      <div class="game-card" data-name="csgo clicker" data-href="CsgoClicker.html">
+        <a class="game-link" href="CsgoClicker.html">217. Csgo Clicker</a>
+        <button class="fav" type="button" aria-label="Favorite Csgo Clicker">☆</button>
+      </div>
+      <div class="game-card" data-name="we become what we behold" data-href="webecomewhatwebehold.html">
+        <a class="game-link" href="webecomewhatwebehold.html">218. We Become What We Behold</a>
+        <button class="fav" type="button" aria-label="Favorite We Become What We Behold">☆</button>
+      </div>
+      <div class="game-card" data-name="one night at freddy&#x27;s" data-href="OneNightAsFreddy.html">
+        <a class="game-link" href="OneNightAsFreddy.html">219. One Night At Freddy&#x27;s</a>
+        <button class="fav" type="button" aria-label="Favorite One Night At Freddy&#x27;s">☆</button>
+      </div>
+      <div class="game-card" data-name="learn to fly" data-href="LearntoFly.html">
+        <a class="game-link" href="LearntoFly.html">220. Learn to Fly</a>
+        <button class="fav" type="button" aria-label="Favorite Learn to Fly">☆</button>
+      </div>
+      <div class="game-card" data-name="learn to fly 2" data-href="LearntoFly2.html">
+        <a class="game-link" href="LearntoFly2.html">221. Learn to Fly 2</a>
+        <button class="fav" type="button" aria-label="Favorite Learn to Fly 2">☆</button>
+      </div>
+      <div class="game-card" data-name="meatboy" data-href="MeatBoy.html">
+        <a class="game-link" href="MeatBoy.html">222. Meatboy</a>
+        <button class="fav" type="button" aria-label="Favorite Meatboy">☆</button>
+      </div>
+      <div class="game-card" data-name="google dino" data-href="GoogleDino.html">
+        <a class="game-link" href="GoogleDino.html">223. Google Dino</a>
+        <button class="fav" type="button" aria-label="Favorite Google Dino">☆</button>
+      </div>
+      <div class="game-card" data-name="google baseball" data-href="GoogleBaseBall.html">
+        <a class="game-link" href="GoogleBaseBall.html">224. Google BaseBall</a>
+        <button class="fav" type="button" aria-label="Favorite Google BaseBall">☆</button>
+      </div>
+      <div class="game-card" data-name="happy room" data-href="HappyRoom.html">
+        <a class="game-link" href="HappyRoom.html">225. Happy Room</a>
+        <button class="fav" type="button" aria-label="Favorite Happy Room">☆</button>
+      </div>
+      <div class="game-card" data-name="huggy wuggy" data-href="HuggyWuggy.html">
+        <a class="game-link" href="HuggyWuggy.html">226. Huggy Wuggy</a>
+        <button class="fav" type="button" aria-label="Favorite Huggy Wuggy">☆</button>
+      </div>
+      <div class="game-card" data-name="angry neighbor" data-href="angryneighborrecode.html">
+        <a class="game-link" href="angryneighborrecode.html">227. Angry Neighbor</a>
+        <button class="fav" type="button" aria-label="Favorite Angry Neighbor">☆</button>
+      </div>
+      <div class="game-card" data-name="backyard baseball" data-href="backyardbaseball.html">
+        <a class="game-link" href="backyardbaseball.html">228. Backyard Baseball</a>
+        <button class="fav" type="button" aria-label="Favorite Backyard Baseball">☆</button>
+      </div>
+      <div class="game-card" data-name="hobo 1" data-href="Hobo1.html">
+        <a class="game-link" href="Hobo1.html">229. Hobo 1</a>
+        <button class="fav" type="button" aria-label="Favorite Hobo 1">☆</button>
+      </div>
+      <div class="game-card" data-name="hobo 2: prison brawl" data-href="Hobo2.html">
+        <a class="game-link" href="Hobo2.html">230. Hobo 2: Prison Brawl</a>
+        <button class="fav" type="button" aria-label="Favorite Hobo 2: Prison Brawl">☆</button>
+      </div>
+      <div class="game-card" data-name="hobo 3: wanted" data-href="Hobo3.html">
+        <a class="game-link" href="Hobo3.html">231. Hobo 3: Wanted</a>
+        <button class="fav" type="button" aria-label="Favorite Hobo 3: Wanted">☆</button>
+      </div>
+      <div class="game-card" data-name="hobo 4: total war" data-href="Hobo4.html">
+        <a class="game-link" href="Hobo4.html">232. Hobo 4: Total War</a>
+        <button class="fav" type="button" aria-label="Favorite Hobo 4: Total War">☆</button>
+      </div>
+      <div class="game-card" data-name="hobo 5: space brawls" data-href="Hobo5.html">
+        <a class="game-link" href="Hobo5.html">233. Hobo 5: Space Brawls</a>
+        <button class="fav" type="button" aria-label="Favorite Hobo 5: Space Brawls">☆</button>
+      </div>
+      <div class="game-card" data-name="cooking mama" data-href="CookingMama.html">
+        <a class="game-link" href="CookingMama.html">234. Cooking Mama</a>
+        <button class="fav" type="button" aria-label="Favorite Cooking Mama">☆</button>
+      </div>
+      <div class="game-card" data-name="clustertruck" data-href="Clustertruck.html">
+        <a class="game-link" href="Clustertruck.html">235. Clustertruck</a>
+        <button class="fav" type="button" aria-label="Favorite Clustertruck">☆</button>
+      </div>
+      <div class="game-card" data-name="alien hominid" data-href="AlienHominid.html">
+        <a class="game-link" href="AlienHominid.html">236. Alien Hominid</a>
+        <button class="fav" type="button" aria-label="Favorite Alien Hominid">☆</button>
+      </div>
+      <div class="game-card" data-name="iron lung" data-href="IronLung.html">
+        <a class="game-link" href="IronLung.html">237. Iron Lung</a>
+        <button class="fav" type="button" aria-label="Favorite Iron Lung">☆</button>
+      </div>
+      <div class="game-card" data-name="swordfight!!" data-href="Swordfight.html">
+        <a class="game-link" href="Swordfight.html">238. Swordfight!!</a>
+        <button class="fav" type="button" aria-label="Favorite Swordfight!!">☆</button>
+      </div>
+      <div class="game-card" data-name="tiletopia" data-href="TileTopia.html">
+        <a class="game-link" href="TileTopia.html">239. TileTopia</a>
+        <button class="fav" type="button" aria-label="Favorite TileTopia">☆</button>
+      </div>
+      <div class="game-card" data-name="plague inc" data-href="PlagueInc.html">
+        <a class="game-link" href="PlagueInc.html">240. Plague Inc</a>
+        <button class="fav" type="button" aria-label="Favorite Plague Inc">☆</button>
+      </div>
+      <div class="game-card" data-name="customer support" data-href="CustomerSupport.html">
+        <a class="game-link" href="CustomerSupport.html">241. Customer Support</a>
+        <button class="fav" type="button" aria-label="Favorite Customer Support">☆</button>
+      </div>
+      <div class="game-card" data-name="baby sniper in vietnam" data-href="BabySniperInVietnam.html">
+        <a class="game-link" href="BabySniperInVietnam.html">242. Baby Sniper In Vietnam</a>
+        <button class="fav" type="button" aria-label="Favorite Baby Sniper In Vietnam">☆</button>
+      </div>
+      <div class="game-card" data-name="cat mario" data-href="CatMario.html">
+        <a class="game-link" href="CatMario.html">243. Cat Mario</a>
+        <button class="fav" type="button" aria-label="Favorite Cat Mario">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life" data-href="DuckLife.html">
+        <a class="game-link" href="DuckLife.html">244. Duck Life</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life 2" data-href="DuckLife2.html">
+        <a class="game-link" href="DuckLife2.html">245. Duck Life 2</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life 2">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life 3" data-href="DuckLife3.html">
+        <a class="game-link" href="DuckLife3.html">246. Duck Life 3</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life 3">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life 4" data-href="DuckLife4.html">
+        <a class="game-link" href="DuckLife4.html">247. Duck Life 4</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life 4">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life 5" data-href="DuckLife5.html">
+        <a class="game-link" href="DuckLife5.html">248. Duck Life 5</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life 5">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life space" data-href="DuckLifeSpace.html">
+        <a class="game-link" href="DuckLifeSpace.html">249. Duck Life Space</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life Space">☆</button>
+      </div>
+      <div class="game-card" data-name="duck life battle" data-href="DuckLifeBattle.html">
+        <a class="game-link" href="DuckLifeBattle.html">250. Duck Life Battle</a>
+        <button class="fav" type="button" aria-label="Favorite Duck Life Battle">☆</button>
+      </div>
+      <div class="game-card" data-name="capybara clicker" data-href="CapybaraClicker.html">
+        <a class="game-link" href="CapybaraClicker.html">251. Capybara Clicker</a>
+        <button class="fav" type="button" aria-label="Favorite Capybara Clicker">☆</button>
+      </div>
+      <div class="game-card" data-name="hill climb racing lite" data-href="HillClimbRacingLite.html">
+        <a class="game-link" href="HillClimbRacingLite.html">252. Hill Climb Racing Lite</a>
+        <button class="fav" type="button" aria-label="Favorite Hill Climb Racing Lite">☆</button>
+      </div>
+      <div class="game-card" data-name="quantum clicker" data-href="QuantumClicker.html">
+        <a class="game-link" href="QuantumClicker.html">253. Quantum Clicker</a>
+        <button class="fav" type="button" aria-label="Favorite Quantum Clicker">☆</button>
+      </div>
+      <div class="game-card" data-name="geometry dash webport" data-href="GeometryDashWebport.html">
+        <a class="game-link" href="GeometryDashWebport.html">254. Geometry Dash Webport</a>
+        <button class="fav" type="button" aria-label="Favorite Geometry Dash Webport">☆</button>
+      </div>
+      <div class="game-card" data-name="bacon may die" data-href="BaconMayDie.html">
+        <a class="game-link" href="BaconMayDie.html">255. Bacon May Die</a>
+        <button class="fav" type="button" aria-label="Favorite Bacon May Die">☆</button>
+      </div>
+      <div class="game-card" data-name="bad monday simulator" data-href="BadMondaySimulator.html">
+        <a class="game-link" href="BadMondaySimulator.html">256. Bad Monday Simulator</a>
+        <button class="fav" type="button" aria-label="Favorite Bad Monday Simulator">☆</button>
+      </div>
+      <div class="game-card" data-name="idle game dev" data-href="IdleGameDev.html">
+        <a class="game-link" href="IdleGameDev.html">257. Idle Game Dev</a>
+        <button class="fav" type="button" aria-label="Favorite Idle Game Dev">☆</button>
+      </div>
+      <div class="game-card" data-name="blackjack" data-href="Blackjack.html">
+        <a class="game-link" href="Blackjack.html">258. Blackjack</a>
+        <button class="fav" type="button" aria-label="Favorite Blackjack">☆</button>
+      </div>
+      <div class="game-card" data-name="idle football manager" data-href="IdleFootballManager.html">
+        <a class="game-link" href="IdleFootballManager.html">259. Idle Football Manager</a>
+        <button class="fav" type="button" aria-label="Favorite Idle Football Manager">☆</button>
+      </div>
+      <div class="game-card" data-name="ages of conflict" data-href="AgesofConflict.html">
+        <a class="game-link" href="AgesofConflict.html">260. Ages of Conflict</a>
+        <button class="fav" type="button" aria-label="Favorite Ages of Conflict">☆</button>
+      </div>
+      <div class="game-card" data-name="there is no game" data-href="ThereisNoGame.html">
+        <a class="game-link" href="ThereisNoGame.html">261. There is No Game</a>
+        <button class="fav" type="button" aria-label="Favorite There is No Game">☆</button>
+      </div>
+      <div class="game-card" data-name="scary teacher 3d" data-href="ScaryTeacher3d.html">
+        <a class="game-link" href="ScaryTeacher3d.html">262. Scary Teacher 3D</a>
+        <button class="fav" type="button" aria-label="Favorite Scary Teacher 3D">☆</button>
+      </div>
+      <div class="game-card" data-name="smash karts" data-href="SmashKarts.html">
+        <a class="game-link" href="SmashKarts.html">263. Smash Karts</a>
+        <button class="fav" type="button" aria-label="Favorite Smash Karts">☆</button>
+      </div>
+      <div class="game-card" data-name="spacebar clicker" data-href="SpacebarClicker.html">
+        <a class="game-link" href="SpacebarClicker.html">264. Spacebar Clicker</a>
+        <button class="fav" type="button" aria-label="Favorite Spacebar Clicker">☆</button>
+      </div>
+      <div class="game-card" data-name="room clicker" data-href="RoomClicker.html">
+        <a class="game-link" href="RoomClicker.html">265. Room Clicker</a>
+        <button class="fav" type="button" aria-label="Favorite Room Clicker">☆</button>
+      </div>
+      <div class="game-card" data-name="stick defenders" data-href="StickDefenders.html">
+        <a class="game-link" href="StickDefenders.html">266. Stick Defenders</a>
+        <button class="fav" type="button" aria-label="Favorite Stick Defenders">☆</button>
+      </div>
+      <div class="game-card" data-name="drift boss" data-href="DriftBoss.html">
+        <a class="game-link" href="DriftBoss.html">267. Drift Boss</a>
+        <button class="fav" type="button" aria-label="Favorite Drift Boss">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf shooter" data-href="FnafShooter.html">
+        <a class="game-link" href="FnafShooter.html">268. Fnaf Shooter</a>
+        <button class="fav" type="button" aria-label="Favorite Fnaf Shooter">☆</button>
+      </div>
+      <div class="game-card" data-name="five nights at frickbear&#x27;s 3" data-href="FiveNightsatFrickbear&#x27;s3.html">
+        <a class="game-link" href="FiveNightsatFrickbear&#x27;s3.html">269. Five Nights at Frickbear&#x27;s 3</a>
+        <button class="fav" type="button" aria-label="Favorite Five Nights at Frickbear&#x27;s 3">☆</button>
+      </div>
+      <div class="game-card" data-name="fnaf 4 halloween" data-href="FNAF4Halloween.html">
+        <a class="game-link" href="FNAF4Halloween.html">270. FNAF 4 Halloween</a>
+        <button class="fav" type="button" aria-label="Favorite FNAF 4 Halloween">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf undertale" data-href="FNFUndertale.html">
+        <a class="game-link" href="FNFUndertale.html">271. FNF Undertale</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Undertale">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf vs fnaf 1" data-href="FNFvsFNAF1.html">
+        <a class="game-link" href="FNFvsFNAF1.html">272. FNF VS FNAF 1</a>
+        <button class="fav" type="button" aria-label="Favorite FNF VS FNAF 1">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf vs fnaf 2" data-href="FNFvsFNAF2.html">
+        <a class="game-link" href="FNFvsFNAF2.html">273. FNF VS FNAF 2</a>
+        <button class="fav" type="button" aria-label="Favorite FNF VS FNAF 2">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf vs fnaf 3" data-href="FNFvsFNAF3.html">
+        <a class="game-link" href="FNFvsFNAF3.html">274. FNF VS FNAF 3</a>
+        <button class="fav" type="button" aria-label="Favorite FNF VS FNAF 3">☆</button>
+      </div>
+      <div class="game-card" data-name="friday night funkin&#x27;: doki doki takeover plus!" data-href="FridayNightFunkin&#x27;:DokiDokiTakeoverPlus!.html">
+        <a class="game-link" href="FridayNightFunkin&#x27;:DokiDokiTakeoverPlus!.html">275. Friday Night Funkin&#x27;: Doki Doki Takeover Plus!</a>
+        <button class="fav" type="button" aria-label="Favorite Friday Night Funkin&#x27;: Doki Doki Takeover Plus!">☆</button>
+      </div>
+      <div class="game-card" data-name="friday night at the pizza tower" data-href="FridayNightAtthePizzaTower.html">
+        <a class="game-link" href="FridayNightAtthePizzaTower.html">276. Friday Night At the Pizza Tower</a>
+        <button class="fav" type="button" aria-label="Favorite Friday Night At the Pizza Tower">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf - creepy internet stories" data-href="FNFCreepyinternetStories.html">
+        <a class="game-link" href="FNFCreepyinternetStories.html">277. FNF - Creepy internet Stories</a>
+        <button class="fav" type="button" aria-label="Favorite FNF - Creepy internet Stories">☆</button>
+      </div>
+      <div class="game-card" data-name="fnf jurassic park breakout" data-href="FNFJurassicParkBreakout.html">
+        <a class="game-link" href="FNFJurassicParkBreakout.html">278. FNF Jurassic Park Breakout</a>
+        <button class="fav" type="button" aria-label="Favorite FNF Jurassic Park Breakout">☆</button>
+      </div>
+      <div class="game-card" data-name="friday night funkin vs herobrine: blocky myths" data-href="FridayNightFunkinVsHerobrine-BlockyMyths.html">
+        <a class="game-link" href="FridayNightFunkinVsHerobrine-BlockyMyths.html">279. Friday Night Funkin Vs Herobrine: Blocky Myths</a>
+        <button class="fav" type="button" aria-label="Favorite Friday Night Funkin Vs Herobrine: Blocky Myths">☆</button>
+      </div>
+      <div class="game-card" data-name="animation vs friday night funkin" data-href="AnimationvsFridayNightFunkin.html">
+        <a class="game-link" href="AnimationvsFridayNightFunkin.html">280. Animation vs Friday Night Funkin</a>
+        <button class="fav" type="button" aria-label="Favorite Animation vs Friday Night Funkin">☆</button>
+      </div>
+
+  </div>
+
+
+
+  <p class="empty" id="empty" hidden>No games found.</p>
+
+
+
+  <script>
+    const search = document.getElementById("search");
+    const cards = [...document.querySelectorAll(".game-card")];
+    const favCount = document.getElementById("favCount");
+    const status = document.getElementById("status");
+    const empty = document.getElementById("empty");
+
+    const STORAGE_KEY = "study-game-favorites";
+    const LISTS = window.GAME_LISTS || {};
+    let view = "all";   // all | fav
+    let cat = "all";    // all | new | fnf | fnaf | clicker | stickman
+    let favorites;
+
+    try {
+      favorites = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
+    } catch {
+      favorites = new Set();
+    }
+
+    function saveFavorites() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...favorites]));
+      } catch {}
+    }
+
+    function updateFavoriteUI() {
+      cards.forEach(card => {
+        const isFav = favorites.has(card.dataset.href);
+        card.classList.toggle("is-fav", isFav);
+        card.querySelector(".fav").textContent = isFav ? "\u2605" : "\u2606";
+      });
+      favCount.textContent = favorites.size ? "(" + favorites.size + ")" : "";
+    }
+
+    function inCategory(card, index) {
+      if (cat === "new") return index >= cards.length - (LISTS.newCount || 50);
+      return (LISTS[cat] || []).includes(card.dataset.href);
+    }
+
+    function applyFilters() {
+      const q = search.value.trim().toLowerCase();
+      let shown = 0;
+
+      cards.forEach((card, index) => {
+        const matchesSearch = card.dataset.name.includes(q);
+        const matchesView = view === "all" || favorites.has(card.dataset.href);
+        const matchesCat = cat === "all" || inCategory(card, index);
+        const show = matchesSearch && matchesView && matchesCat;
+        card.hidden = !show;
+        if (show) shown++;
+      });
+
+      status.textContent = shown + (shown === 1 ? " game" : " games") + " shown";
+      empty.textContent = view === "fav" && !search.value.trim() && cat === "all"
+        ? "No favorites yet. Tap the star on any game to pin it here."
+        : "No games found.";
+      empty.hidden = shown !== 0;
+    }
+
+    cards.forEach(card => {
+      card.querySelector(".fav").addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const href = card.dataset.href;
+        if (favorites.has(href)) favorites.delete(href);
+        else favorites.add(href);
+
+        saveFavorites();
+        updateFavoriteUI();
+        applyFilters();
+      });
+    });
+
+    /* menu buttons: Games, New Games, Favorites and the game categories */
+    const MENU = {
+      all: ["all", "all"],
+      fav: ["fav", "all"],
+      "new": ["all", "new"],
+      fnf: ["all", "fnf"],
+      fnaf: ["all", "fnaf"],
+      clicker: ["all", "clicker"],
+      stickman: ["all", "stickman"]
+    };
+    const menuButtons = [...document.querySelectorAll("#side-nav button[data-nav]")];
+
+    menuButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const pick = MENU[button.dataset.nav];
+        if (!pick) return;
+        view = pick[0];
+        cat = pick[1];
+        menuButtons.forEach(b => b.classList.toggle("is-on", b === button));
+        applyFilters();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (window.innerWidth < 700) document.getElementById("nav-toggle").click();
+      });
+    });
+
+    search.addEventListener("input", applyFilters);
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "/" && document.activeElement !== search) {
+        event.preventDefault();
+        search.focus();
+      }
+    });
+
+    updateFavoriteUI();
+    applyFilters();
+
+    /* games slide in whenever they scroll into view (up or down) */
+    SiteFX.slideOnScroll("#games", ".game-card", { initial: true });
+  </script>
+
+</body>
+
+</html>

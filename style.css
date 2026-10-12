@@ -1,0 +1,1052 @@
+/* ==========================================================
+   Stratford Knights Boys Tennis
+   ========================================================== */
+
+:root {
+  --court: #000000;
+  --carbon: #101114;
+  --carbon-2: #17181d;
+  --line: #2a2c33;
+  --knight: #d6202b;
+  --flare: #ff4a3d;
+  --chalk: #f3f0ea;
+  --ash: #83868f;
+
+  --display: "Big Shoulders Display", "Oswald", "Haettenschweiler",
+             "Arial Narrow", sans-serif;
+  --body: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --panel: 116px;   /* side banner width */
+  --gutter: 28px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--court);
+  color: var(--chalk);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+::selection { background: var(--knight); color: #fff; }
+
+/* ---------- Side banner panels ---------- */
+
+.banner {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--panel);
+  background-image: url("knight-mark.png");
+  background-repeat: repeat-y;
+  background-size: 62px 152px;
+  background-position: center 40px;
+  opacity: .55;
+  z-index: 1;
+  pointer-events: none;
+  filter: saturate(1.1);
+}
+
+.banner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent, var(--knight) 12%, var(--knight) 88%, transparent);
+  opacity: .55;
+}
+
+.banner-left  { left: 0;  background-position: center 40px; }
+.banner-right { right: 0; background-position: center 96px; }
+.banner-left::after  { right: 0; }
+.banner-right::after { left: 0; }
+
+/* soften the tile edges into black */
+.banner-left,
+.banner-right {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 45%, #000 55%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 45%, #000 55%, transparent);
+}
+
+/* ---------- Crest watermark ---------- */
+
+.watermark {
+  position: fixed;
+  inset: 0;
+  background-image: url("knight-mark.png");
+  background-repeat: no-repeat;
+  background-position: center 55%;
+  background-size: min(72vh, 660px) auto;
+  opacity: .032;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- Frame ---------- */
+
+.frame {
+  position: relative;
+  z-index: 2;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* ---------- Navigation ---------- */
+
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 14px 0;
+  background: rgba(0, 0, 0, .82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-crest img { width: 30px; height: auto; }
+.nav-crest { line-height: 0; flex: none; }
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin-left: auto;
+}
+
+.nav-links a {
+  position: relative;
+  color: var(--ash);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: .01em;
+  padding: 4px 0;
+  transition: color .18s ease;
+}
+
+.nav-links a:hover,
+.nav-links a:focus-visible { color: var(--chalk); }
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 100%;
+  bottom: 0;
+  height: 2px;
+  background: var(--knight);
+  transition: right .22s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links a:focus-visible::after { right: 0; }
+
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  min-height: calc(100vh - 66px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 56px 0 84px;
+}
+
+.hero-crest {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.hero-crest::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 340px;
+  height: 340px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(214, 32, 43, .34), transparent 62%);
+  pointer-events: none;
+}
+
+.hero-crest img {
+  position: relative;
+  width: clamp(124px, 19vw, 178px);
+  margin: 0 auto;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, .8));
+}
+
+.hero-kicker {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(76px, 17vw, 190px);
+  line-height: .82;
+  letter-spacing: -.01em;
+  margin: 10px 0 0;
+  color: var(--chalk);
+  text-shadow: 0 0 60px rgba(214, 32, 43, .28);
+}
+
+.hero-sub {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(26px, 5vw, 46px);
+  line-height: 1;
+  margin: 6px 0 0;
+  color: var(--knight);
+  letter-spacing: .02em;
+}
+
+.hero-meta {
+  margin: 18px 0 0;
+  color: var(--ash);
+  font-size: 15px;
+}
+
+.hero-record {
+  display: flex;
+  gap: clamp(26px, 6vw, 64px);
+  margin-top: 46px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.rec { display: flex; flex-direction: column; align-items: center; }
+
+.rec-num {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--chalk);
+}
+
+.rec-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ash);
+  letter-spacing: .06em;
+}
+
+
+/* ---------- Sections ---------- */
+
+.section {
+  padding: 92px 0;
+  border-top: 1px solid var(--line);
+}
+
+.section h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(38px, 6vw, 62px);
+  line-height: 1;
+  margin: 0 0 10px;
+  letter-spacing: -.005em;
+}
+
+.section-note {
+  margin: 0 0 34px;
+  color: var(--ash);
+  max-width: 62ch;
+}
+
+.muted { color: var(--ash); font-size: 15px; }
+
+p { max-width: 68ch; }
+
+/* ---------- Team ---------- */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: 1fr .85fr;
+  gap: 40px;
+  align-items: start;
+  margin-top: 26px;
+}
+
+.team-copy p { margin-top: 0; }
+
+/* ---------- Photo slots ---------- */
+
+.photo-slot {
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(243, 240, 234, .022) 0 10px,
+      transparent 10px 20px),
+    var(--carbon);
+  border: 1px solid var(--line);
+  color: var(--ash);
+  font-size: 14px;
+}
+
+.photo-slot span { font-weight: 600; color: #b9bcc4; }
+.photo-slot small { font-size: 12px; }
+.photo-slot code {
+  font-family: var(--body);
+  color: var(--knight);
+  font-weight: 600;
+}
+
+.team-photo { aspect-ratio: 5 / 4; }
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* ---------- Roster ---------- */
+
+.search-row { margin-bottom: 26px; }
+
+#search {
+  width: min(340px, 100%);
+  padding: 11px 14px;
+  background: var(--carbon);
+  border: 1px solid var(--line);
+  color: var(--chalk);
+  font-family: var(--body);
+  font-size: 15px;
+  border-radius: 2px;
+}
+
+#search::placeholder { color: #61646c; }
+
+#search:focus {
+  outline: none;
+  border-color: var(--knight);
+  box-shadow: 0 0 0 3px rgba(214, 32, 43, .18);
+}
+
+.search-message {
+  margin: 10px 0 0;
+  min-height: 20px;
+  font-size: 14px;
+  color: var(--ash);
+}
+
+.search-message.found { color: #6fd08c; }
+.search-message.missing { color: var(--flare); }
+
+.roster-carousel {
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.arrow {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--chalk);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.arrow span { transform: translateY(-2px); }
+
+.arrow:hover {
+  background: var(--knight);
+  border-color: var(--knight);
+  color: #fff;
+}
+
+.player-card {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 234px 1fr;
+  gap: 0;
+  background: var(--carbon);
+  border: 1px solid var(--line);
+  /* notched corner, echoing the crest's angled cuts */
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+}
+
+.player-card.swap { animation: swap .28s ease; }
+
+@keyframes swap {
+  from { opacity: .25; transform: translateY(6px); }
+  to   { opacity: 1;   transform: none; }
+}
+
+.player-photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 24px;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(243, 240, 234, .022) 0 10px,
+      transparent 10px 20px),
+    var(--carbon-2);
+  border-right: 1px solid var(--line);
+  color: var(--ash);
+  font-size: 13px;
+  text-align: center;
+}
+
+.player-crest { width: 58px; opacity: .3; }
+.player-photo span { display: block; }
+
+.player-body { padding: 30px 34px; }
+
+.player-seed {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 56px;
+  line-height: .9;
+  margin: 0;
+  color: var(--knight);
+}
+
+.player-body h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.02;
+  margin: 2px 0 22px;
+  letter-spacing: -.005em;
+}
+
+.player-stats {
+  display: flex;
+  gap: 40px;
+  margin: 0 0 22px;
+}
+
+.player-stats dt {
+  font-size: 12px;
+  color: var(--ash);
+  letter-spacing: .05em;
+  margin-bottom: 2px;
+}
+
+.player-stats dd {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.bar {
+  height: 5px;
+  background: #24262c;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--knight), var(--flare));
+  border-radius: 99px;
+  transition: width .45s cubic-bezier(.2, .7, .3, 1);
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.dots button {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #33353c;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+
+.dots button:hover { background: #55585f; }
+
+.dots button[aria-current="true"] {
+  background: var(--knight);
+  transform: scale(1.35);
+}
+
+/* ---------- Ladder ---------- */
+
+.ladder {
+  list-style: none;
+  counter-reset: seed;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.ladder li {
+  counter-increment: seed;
+  display: grid;
+  grid-template-columns: 54px 1fr 150px 112px;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 6px;
+  border-bottom: 1px solid var(--line);
+  transition: background .16s ease;
+}
+
+.ladder li:hover { background: rgba(255, 255, 255, .025); }
+
+.ladder li::before {
+  content: counter(seed);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--knight);
+  text-align: center;
+}
+
+.ladder .who {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 1.1;
+}
+
+.ladder .rowbar {
+  height: 5px;
+  background: #24262c;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ladder .rowbar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--knight), var(--flare));
+  border-radius: 99px;
+}
+
+.ladder .rec-line {
+  text-align: right;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.ladder .rec-line b {
+  display: block;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--chalk);
+}
+
+.ladder .rec-line small {
+  font-size: 12px;
+  color: var(--ash);
+}
+
+/* ---------- Matches ---------- */
+
+.scoreboard {
+  padding: 58px 32px;
+  text-align: center;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(243, 240, 234, .02) 0 2px,
+      transparent 2px 5px),
+    var(--carbon);
+  border: 1px solid var(--line);
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+}
+
+.scoreboard-line {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(32px, 6vw, 58px);
+  line-height: 1;
+  margin: 0 auto;
+  color: var(--knight);
+  letter-spacing: .01em;
+}
+
+.scoreboard-note {
+  margin: 14px auto 0;
+  color: var(--ash);
+  font-size: 15px;
+}
+
+/* ---------- Location ---------- */
+
+.location-grid {
+  display: grid;
+  grid-template-columns: .8fr 1.2fr;
+  gap: 36px;
+  align-items: start;
+  margin-top: 26px;
+}
+
+.address {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.32;
+  margin: 0 0 16px;
+}
+
+.map {
+  border: 1px solid var(--line);
+  line-height: 0;
+  background: var(--carbon);
+}
+
+.map iframe {
+  width: 100%;
+  height: 380px;
+  border: 0;
+  filter: grayscale(.45) contrast(1.05);
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+  padding: 66px 0 78px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+
+.footer-crest { width: 46px; margin: 0 auto 18px; opacity: .85; }
+
+.footer-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 26px;
+  margin: 0;
+}
+
+.footer-cheer {
+  margin: 4px auto 0;
+  color: var(--knight);
+  font-weight: 600;
+  letter-spacing: .1em;
+  font-size: 14px;
+}
+
+footer p { max-width: none; }
+
+/* ---------- Focus ---------- */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--flare);
+  outline-offset: 3px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1340px) {
+  .banner { opacity: .34; width: 92px; background-size: 60px auto; }
+}
+
+@media (max-width: 1180px) {
+  .banner { display: none; }
+}
+
+@media (max-width: 900px) {
+  .team-grid,
+  .location-grid { grid-template-columns: 1fr; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .ladder li { grid-template-columns: 40px 1fr 104px; gap: 12px; }
+  .ladder .rowbar { display: none; }
+}
+
+@media (max-width: 680px) {
+  body { font-size: 16px; }
+  .section { padding: 68px 0; }
+  .nav-links { gap: 2px 14px; }
+  .nav-links a { font-size: 13px; }
+  .player-card { grid-template-columns: 1fr; }
+  .player-photo { border-right: 0; border-bottom: 1px solid var(--line); padding: 30px; }
+  .player-body { padding: 24px; }
+  .player-stats { gap: 26px; }
+  .roster-carousel { gap: 10px; }
+  .arrow { width: 40px; height: 40px; font-size: 22px; }
+  .hero-record { gap: 22px; }
+  .rec-num { font-size: 34px; }
+}
+
+@media (max-width: 680px) {
+  .watermark { opacity: .022; background-size: 300px auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+
+/* ==========================================================
+   Team / Coach / Team Pictures additions
+   Existing CSS above is unchanged.
+   ========================================================== */
+
+.featured-photos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  max-width: 800px;
+  margin: 30px auto 0;
+}
+
+.featured-photo {
+  background: var(--carbon);
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+
+.featured-photo img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.featured-photo h3 {
+  font-family: var(--display);
+  font-size: 26px;
+  margin: 12px 4px 3px;
+  color: var(--chalk);
+}
+
+.collection-title {
+  margin-top: 60px !important;
+  text-align: center;
+}
+
+.photo-carousel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.photo-window {
+  width: 100%;
+  overflow: hidden;
+}
+
+.photo-track {
+  display: flex;
+  transition: transform 0.45s ease;
+}
+
+.photo-page {
+  flex: 0 0 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.photo-page img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--line);
+  background-color: var(--carbon);
+}
+
+.photo-arrow {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  background-color: transparent;
+  color: var(--chalk);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.photo-arrow:hover {
+  background-color: var(--knight);
+  color: white;
+}
+
+@media (max-width: 800px) {
+  .featured-photos {
+    max-width: 650px;
+  }
+
+  .featured-photo img {
+    height: 250px;
+  }
+}
+
+@media (max-width: 500px) {
+  .featured-photos {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-photo img {
+    height: 260px;
+  }
+}
+
+/* ==========================================================
+   Team Picture Expand Button
+   ========================================================== */
+
+.photo-item {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.photo-item > img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--line);
+  background-color: var(--carbon);
+}
+
+
+/* Expand icon */
+
+.expand-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 6px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(0, 0, 0, .75);
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  z-index: 5;
+
+  transition:
+    background .18s ease,
+    transform .18s ease;
+}
+
+.expand-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.expand-button:hover {
+  background: rgba(214, 32, 43, .9);
+  transform: scale(1.08);
+}
+
+
+/* ==========================================================
+   Expanded Picture Popup
+   ========================================================== */
+
+.photo-modal {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 9999;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px;
+
+  background: rgba(0, 0, 0, .92);
+}
+
+.photo-modal.show {
+  display: flex;
+}
+
+.photo-modal > img {
+  max-width: 92vw;
+  max-height: 88vh;
+
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
+
+  border: 1px solid var(--line);
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .8);
+}
+
+
+/* Close button */
+
+.close-photo {
+  position: absolute;
+
+  top: 22px;
+  right: 28px;
+
+  width: 48px;
+  height: 48px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  background: rgba(0, 0, 0, .75);
+
+  color: white;
+
+  border: 1px solid var(--line);
+  border-radius: 50%;
+
+  font-size: 34px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  z-index: 10000;
+
+  transition:
+    background .18s ease,
+    transform .18s ease;
+}
+
+.close-photo:hover {
+  background: var(--knight);
+  transform: scale(1.08);
+}
+
+
+/* Phone */
+
+@media (max-width: 600px) {
+
+  .photo-modal {
+    padding: 20px;
+  }
+
+  .photo-modal > img {
+    max-width: 96vw;
+    max-height: 82vh;
+  }
+
+  .close-photo {
+    top: 12px;
+    right: 12px;
+  }
+
+  .expand-button {
+    width: 32px;
+    height: 32px;
+    right: 6px;
+    bottom: 6px;
+    padding: 5px;
+  }
+
+}
+
+/* ==========================================================
+   QR Codes
+   ========================================================== */
+
+.qr-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 28px;
+}
+
+.qr-card {
+  text-align: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--line);
+}
+
+.qr-card h3 {
+  margin: 0 0 20px;
+  font-size: 1.4rem;
+}
+
+.qr-card img {
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+
+/* Phone */
+
+@media (max-width: 700px) {
+
+  .qr-section {
+    grid-template-columns: 1fr;
+  }
+
+}
+

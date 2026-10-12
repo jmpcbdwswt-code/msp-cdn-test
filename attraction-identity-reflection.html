@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Attraction & Identity Reflection Quiz</title>
+<style>
+*{box-sizing:border-box}:root{--bg:#f5f5f7;--card:#fff;--ink:#1c1c1e;--muted:#6e6e73;--line:#dedee3;--accent:#6556d9;--soft:#f1efff}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:auto;padding:30px 16px 60px}.brand{font-weight:850;margin-bottom:18px}.brand span{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 12px 35px #0000000a}.hidden{display:none!important}
+h1{font-size:31px;letter-spacing:-.8px;margin:0 0 10px}.lead{color:var(--muted);line-height:1.6;margin:0 0 20px}.notice{background:#f7f7f9;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;color:#55555d;line-height:1.55}
+button{font:inherit;border:0;cursor:pointer;border-radius:11px;padding:12px 17px;font-weight:800}.primary{background:var(--accent);color:white}.secondary{background:#efeff2}.skip{background:white;border:1px solid var(--line);color:var(--muted)}
+.start{margin-top:20px}.top{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:12px}.progress{height:7px;background:#ececf0;border-radius:20px;overflow:hidden;margin-bottom:28px}.progress div{height:100%;background:var(--accent);transition:.2s}
+.optional{font-size:11px;font-weight:900;letter-spacing:.09em;color:var(--accent);background:var(--soft);padding:5px 8px;border-radius:7px;display:inline-block;margin-bottom:13px}.q{font-size:23px;line-height:1.4;font-weight:800;margin-bottom:19px}
+.answers{display:grid;gap:10px}.answer{background:#fff;border:1px solid var(--line);text-align:left;color:#29292e}.answer:hover{background:#faf9ff;border-color:#afa7e8}.answer.sel{background:var(--soft);border:2px solid var(--accent);padding:11px 16px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:25px}.navright{display:flex;gap:9px}
+.result{text-align:center}.icon{font-size:40px;margin-bottom:8px}.result h1{margin-bottom:8px}.resultText{max-width:590px;margin:0 auto;color:#55555d;line-height:1.65}
+.box{margin-top:22px;background:#f8f8fa;border:1px solid var(--line);border-radius:13px;padding:17px;text-align:left}.box b{display:block;margin-bottom:6px}.box p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:20px 0}.tag{background:var(--soft);color:#5045ad;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800}
+@media(max-width:560px){.card{padding:20px}.q{font-size:20px}.nav{align-items:flex-end}.navright{flex-direction:column}}
+</style>
+</head><body>
+<div class="wrap">
+ <div class="brand"><span>Identity</span> Reflection</div>
+ <section class="card" id="start">
+  <h1>Attraction & identity reflection</h1>
+  <p class="lead">A private, low-pressure quiz for thinking about your romantic feelings and the labels—if any—that feel comfortable to you.</p>
+  <div class="notice"><b>This isn't a scientific “gay test.”</b> No quiz can determine your sexual orientation for you. Attraction can also be clear, complicated, change in how you understand it over time, or not need a label at all. Every question is optional.</div>
+  <button class="primary start" onclick="begin()">Start reflection</button>
+ </section>
+
+ <section class="card hidden" id="quiz">
+  <div class="top"><span id="count"></span><span>PRIVATE REFLECTION</span></div><div class="progress"><div id="bar"></div></div>
+  <span class="optional">Optional — skip anytime</span><div class="q" id="question"></div><div class="answers" id="answers"></div>
+  <div class="nav"><button class="secondary" onclick="back()">Back</button><div class="navright"><button class="skip" onclick="skip()">Skip</button><button class="primary" onclick="next()">Next</button></div></div>
+ </section>
+
+ <section class="card hidden result" id="result">
+  <div class="icon">◇</div><h1 id="resultTitle"></h1><div class="tags" id="tags"></div><p class="resultText" id="resultText"></p>
+  <div class="box"><b>What this result means</b><p id="explain"></p></div>
+  <div class="box"><b>No score decides your identity</b><p>You get to decide whether words such as gay, straight, bisexual, questioning, or no label at all describe you. You also don't need to decide immediately.</p></div>
+  <button class="primary start" onclick="location.reload()">Take it again</button>
+ </section>
+</div>
+<script>
+const qs=[
+["When you imagine having a crush, who can you most naturally picture yourself liking?",["A different gender","The same gender","More than one gender","I'm not sure / it varies"]],
+["Thinking about crushes you've actually had, which description fits best?",["Mostly different-gender crushes","Mostly same-gender crushes","Crushes on more than one gender","I haven't had clear crushes / I'm unsure"]],
+["When you imagine going on a date someday, which feels most natural?",["Dating a different gender","Dating the same gender","Either / more than one gender could feel natural","I'm not sure"]],
+["When you picture a future romantic partner, what comes to mind most easily?",["Someone of a different gender","Someone of the same gender","Their gender could vary / isn't decisive","I can't really picture it"]],
+["Have you ever wondered whether you might be attracted to the same gender?",["Not really","Yes, occasionally","Yes, quite a bit","I'm currently trying to figure that out"]],
+["How do you feel about the possibility of having a same-gender crush?",["It doesn't feel like me","It seems possible","It feels familiar to my experience","I'm uncertain"]],
+["How do you feel about the possibility of having a different-gender crush?",["It feels familiar to my experience","It seems possible","It doesn't really fit my experience","I'm uncertain"]],
+["Which statement feels closest right now?",["My attraction seems mostly toward a different gender","My attraction seems mostly toward the same gender","I can experience attraction to more than one gender","I genuinely don't know yet"]],
+["When you notice someone you find especially cute or appealing, who is it usually?",["Usually a different gender","Usually the same gender","It can be more than one gender","I don't notice this much / unsure"]],
+["Do your real-life feelings match the orientation you have assumed you are?",["Yes, pretty clearly","Not completely","Not really","I haven't assumed an orientation"]],
+["If nobody else had an opinion about it, would you feel more comfortable exploring your feelings?",["I don't feel a need to","Maybe","Yes","I'm not sure"]],
+["How certain do you currently feel about your romantic attraction?",["Pretty certain","Somewhat certain","Still questioning","Very unsure"]],
+["Does a particular orientation label currently feel comfortable to you?",["Yes","Maybe, but I'm still exploring","No label feels quite right","I'd rather not use a label"]],
+["Have your crushes or feelings ever surprised you?",["Not really","Once or twice","Yes, several times","I'm not sure"]],
+["When thinking about attraction, which matters most to you?",["Gender is a strong part of who I like","I can be attracted across genders","The individual matters more to me than gender","I haven't figured that out"]],
+["If you imagined telling yourself 'I might not be straight,' how does that thought feel?",["It doesn't seem to describe me","Possible, but uncertain","It resonates with me","I'd rather not label it"]],
+["If you imagined telling yourself 'I might be gay,' how does that thought feel?",["It doesn't seem to describe me","Possible, but uncertain","It resonates with me","I'd rather not label it"]],
+["If you imagined telling yourself 'I might be bi or attracted to more than one gender,' how does that feel?",["It doesn't seem to describe me","Possible, but uncertain","It resonates with me","I'd rather not label it"]],
+["Are you taking this quiz because you've been questioning your orientation?",["No, mostly curiosity","A little","Yes","I'm not sure"]],
+["Right now, what would be most useful to you?",["Nothing—I feel pretty sure","Time to understand my feelings","Freedom to explore without choosing a label","I'm not sure yet"]]
+];
+let i=0,ans=new Array(qs.length).fill(null);
+function begin(){start.classList.add("hidden");quiz.classList.remove("hidden");render()}
+function render(){count.textContent=`Question ${i+1} of ${qs.length}`;bar.style.width=`${(i+1)/qs.length*100}%`;question.textContent=qs[i][0];answers.innerHTML="";qs[i][1].forEach((x,n)=>{let b=document.createElement("button");b.className="answer"+(ans[i]===n?" sel":"");b.textContent=x;b.onclick=()=>{ans[i]=n;render()};answers.appendChild(b)})}
+function next(){if(i<qs.length-1){i++;render()}else finish()}
+function skip(){ans[i]=null;next()}
+function back(){if(i>0){i--;render()}else{quiz.classList.add("hidden");start.classList.remove("hidden")}}
+function finish(){
+ quiz.classList.add("hidden");result.classList.remove("hidden");
+ let same=0,diff=0,multi=0,uncertain=0,answered=0;
+ ans.forEach((a,n)=>{if(a===null)return;answered++;let text=qs[n][1][a].toLowerCase();
+   if(text.includes("same gender")||text.includes("same-gender")||text.includes("resonates"))same++;
+   if(text.includes("different gender")||text.includes("different-gender"))diff++;
+   if(text.includes("more than one")||text.includes("across genders")||text.includes("could vary"))multi++;
+   if(text.includes("unsure")||text.includes("uncertain")||text.includes("question")||text.includes("don't know")||text.includes("not sure"))uncertain++;
+ });
+ let title,txt,taglist=[];
+ if(answered<6){title="Not enough answered to reflect a pattern";txt="You skipped most of the questions, which is completely fine. There isn't enough information here to summarize a pattern.";taglist=["No conclusion needed"];}
+ else if(uncertain>=7){title="You're still exploring";txt="A lot of your answers point toward uncertainty or active questioning. You don't need to force that uncertainty into a label. Paying attention to your real crushes and feelings over time may tell you more than a quiz can.";taglist=["Questioning","No rush"];}
+ else if(multi>=3 && (same>=2||diff>=2)){title="Your answers suggest attraction may not fit one gender";txt="Several of your answers leave room for attraction to more than one gender. Some people with similar experiences use labels such as bisexual, while others use a different label or none at all.";taglist=["Multiple-gender attraction may resonate","Your label is your choice"];}
+ else if(same>diff+2){title="Same-gender attraction seems meaningful in your answers";txt="Your responses suggest that same-gender crushes or romantic possibilities may feel meaningful to you. That can be worth reflecting on, but this quiz cannot decide whether 'gay' or any other label is right for you.";taglist=["Same-gender attraction","Self-reflection"];}
+ else if(diff>same+2){title="Different-gender attraction seems most familiar";txt="Your responses mostly describe different-gender attraction as familiar. That may fit how you understand yourself now, while still leaving you free to understand your feelings differently in the future.";taglist=["Different-gender attraction","Self-reflection"];}
+ else{title="Your answers are mixed—and that's okay";txt="Your responses don't point strongly in one direction. Attraction isn't always simple, and you don't have to turn mixed feelings into a label.";taglist=["Mixed feelings","No rush"];}
+ resultTitle.textContent=title;resultText.textContent=txt;tags.innerHTML=taglist.map(x=>`<span class="tag">${x}</span>`).join("");
+ explain.textContent="This is a reflection of the answers you selected, not a diagnosis, percentage, or proof of an orientation. Your own feelings and experiences are more meaningful than the quiz result.";
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+</script>
+</body></html>

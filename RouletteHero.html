@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <meta
+    http-equiv="Content-Type"
+    content="text/html; charset=utf-8"
+  >
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>Roulette Hero</title>
+
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #unity-container {
+      position: fixed;
+      inset: 0;
+
+      width: 100vw;
+      height: 100vh;
+
+      margin: 0;
+      padding: 0;
+
+      background: #000;
+    }
+
+    #unity-canvas {
+      position: absolute;
+      inset: 0;
+
+      width: 100vw !important;
+      height: 100vh !important;
+
+      margin: 0;
+      padding: 0;
+      border: 0;
+
+      display: block;
+      background: #000;
+
+      outline: none;
+    }
+
+    /* Loading screen */
+    #unity-loading-bar {
+      position: absolute;
+
+      left: 50%;
+      top: 50%;
+
+      transform: translate(-50%, -50%);
+
+      width: 300px;
+
+      z-index: 1000;
+    }
+
+    #unity-logo {
+      display: none;
+    }
+
+    #unity-progress-bar-empty {
+      width: 100%;
+      height: 12px;
+
+      background: rgba(255, 255, 255, 0.2);
+
+      border-radius: 20px;
+
+      overflow: hidden;
+    }
+
+    #unity-progress-bar-full {
+      width: 0%;
+      height: 100%;
+
+      background: white;
+
+      border-radius: 20px;
+
+      transition: width 0.1s linear;
+    }
+
+    /* Unity warnings/errors */
+    #unity-warning {
+      position: absolute;
+
+      top: 0;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      z-index: 2000;
+    }
+
+    /* Hide normal Unity footer */
+    #unity-footer {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="unity-container">
+
+    <canvas
+      id="unity-canvas"
+      width="960"
+      height="600"
+      tabindex="-1"
+    ></canvas>
+
+    <div id="unity-loading-bar">
+
+      <div id="unity-logo"></div>
+
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+
+    </div>
+
+    <div id="unity-warning"></div>
+
+  </div>
+
+
+  <script>
+    const BASE_URL =
+      "https://cdn.jsdelivr.net/gh/shayderrr/portsv4@f062252f3248db5a493ede8b57e68a29ae96dee3/15819845/Build/";
+
+    const canvas = document.querySelector("#unity-canvas");
+
+    const loadingBar =
+      document.querySelector("#unity-loading-bar");
+
+    const progressBar =
+      document.querySelector("#unity-progress-bar-full");
+
+
+    function unityShowBanner(msg, type) {
+
+      const warningBanner =
+        document.querySelector("#unity-warning");
+
+
+      function updateBannerVisibility() {
+
+        warningBanner.style.display =
+          warningBanner.children.length
+            ? "block"
+            : "none";
+
+      }
+
+
+      const div =
+        document.createElement("div");
+
+      div.innerHTML = msg;
+
+      warningBanner.appendChild(div);
+
+
+      if (type === "error") {
+
+        div.style.cssText =
+          "background:red;color:white;padding:10px;";
+
+      }
+
+      else if (type === "warning") {
+
+        div.style.cssText =
+          "background:yellow;color:black;padding:10px;";
+
+      }
+
+
+      if (type !== "error") {
+
+        setTimeout(() => {
+
+          if (div.parentNode) {
+            warningBanner.removeChild(div);
+          }
+
+          updateBannerVisibility();
+
+        }, 5000);
+
+      }
+
+
+      updateBannerVisibility();
+    }
+
+
+    async function fetchAndMerge(fileParts) {
+
+      const blobs =
+        await Promise.all(
+
+          fileParts.map(async part => {
+
+            const response =
+              await fetch(BASE_URL + part);
+
+            if (!response.ok) {
+
+              throw new Error(
+                "Failed to load part: " + part
+              );
+
+            }
+
+            return await response.blob();
+
+          })
+
+        );
+
+
+      return URL.createObjectURL(
+        new Blob(blobs)
+      );
+    }
+
+
+    function resizeGame() {
+
+      canvas.style.width = "100vw";
+      canvas.style.height = "100vh";
+
+    }
+
+
+    resizeGame();
+
+    window.addEventListener(
+      "resize",
+      resizeGame
+    );
+
+
+    loadingBar.style.display = "block";
+
+
+    (async () => {
+
+      try {
+
+        const dataParts = [
+          "Web.data.br.part1",
+          "Web.data.br.part2",
+          "Web.data.br.part3",
+          "Web.data.br.part4",
+          "Web.data.br.part5"
+        ];
+
+
+        const wasmParts = [
+          "Web.wasm.br.part1",
+          "Web.wasm.br.part2",
+          "Web.wasm.br.part3"
+        ];
+
+
+        const [
+          mergedDataUrl,
+          mergedWasmUrl
+        ] = await Promise.all([
+
+          fetchAndMerge(dataParts),
+
+          fetchAndMerge(wasmParts)
+
+        ]);
+
+
+        const config = {
+
+          arguments: [],
+
+          dataUrl:
+            mergedDataUrl,
+
+          frameworkUrl:
+            BASE_URL + "Web.framework.js",
+
+          codeUrl:
+            mergedWasmUrl,
+
+          streamingAssetsUrl:
+            BASE_URL + "StreamingAssets",
+
+          companyName:
+            "Free Lives",
+
+          productName:
+            "Roulette Hero",
+
+          productVersion:
+            "0.1",
+
+          showBanner:
+            unityShowBanner
+
+        };
+
+
+        const script =
+          document.createElement("script");
+
+
+        script.src =
+          BASE_URL + "Web.loader.js";
+
+
+        script.onload = () => {
+
+          createUnityInstance(
+
+            canvas,
+
+            config,
+
+            progress => {
+
+              progressBar.style.width =
+                (100 * progress) + "%";
+
+            }
+
+          )
+
+          .then(unityInstance => {
+
+            loadingBar.style.display =
+              "none";
+
+            resizeGame();
+
+            console.log(
+              "Roulette Hero loaded successfully."
+            );
+
+          })
+
+          .catch(error => {
+
+            console.error(error);
+
+            unityShowBanner(
+              error.toString(),
+              "error"
+            );
+
+          });
+
+        };
+
+
+        script.onerror = () => {
+
+          unityShowBanner(
+            "Failed to load the Unity loader.",
+            "error"
+          );
+
+        };
+
+
+        document.body.appendChild(script);
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        unityShowBanner(
+          "Error loading game assets: " +
+          error.message,
+          "error"
+        );
+
+      }
+
+    })();
+  </script>
+
+</body>
+</html>

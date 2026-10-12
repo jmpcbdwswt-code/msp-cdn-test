@@ -1,0 +1,15 @@
+CHEESE CUBE - NETLIFY SETUP (NOT YET TESTED AS PLAYABLE)
+1. Extract this ZIP into the ROOT of your existing website (where your main index.html is).
+2. In GitHub Codespaces terminal, from that root run: python3 download-missing.py
+3. Confirm it says 108 present/downloaded, 0 missing.
+4. Test with: python3 -m http.server 8000
+5. Open the Codespaces port preview at /zm_ccube/ and check browser Console and Network for 404s/errors.
+6. If it works, deploy the website root to Netlify.
+
+Notes:
+- 108 PNG images are NOT included. The script tries to retrieve them from the original domain.
+- This package is an unverified reconstruction from a browser HAR, not a complete original project.
+- Shared root folders game/ and vendor/ are needed; do not upload only zm_ccube/.
+- Some absolute URLs, imports, or runtime network calls may require further changes.
+- Multiplayer/server-side functionality is not guaranteed to work on static Netlify hosting.
+- Ensure you have permission to redistribute the original game assets.

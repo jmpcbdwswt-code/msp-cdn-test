@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Owl Can't Sleep 2 - By Joshua</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #0d0e15;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+        canvas {
+            background-color: #0d0e15;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+            max-height: 100vh;
+            max-width: 100vw;
+            touch-action: none;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- OWL DATA ---
+    const owlRoster = [
+        { id: 0, name: "Basic Owl", reqScore: 0, rarity: "Common", rColor: "#AAAAAA" },
+        { id: 2, name: "Josh Owl 2", reqScore: 50, rarity: "Uncommon", rColor: "#4CAF50" },
+        { id: 4, name: "Lan Owl", reqScore: 100, rarity: "Rare", rColor: "#2196F3" },
+        { id: 5, name: "Devon Owl", reqScore: 200, rarity: "Epic", rColor: "#9C27B0" },
+        { id: 1, name: "Josh Owl", reqScore: 500, rarity: "Mythic", rColor: "#FFD700" },
+        { id: 3, name: "Dani Owl", reqScore: 500, rarity: "Mythic", rColor: "#FFD700" },
+        { id: 6, name: "Gold Josh", reqScore: 0, rarity: "Secret", rColor: "#FFDF00" },
+        { id: 7, name: "Liliana Owl", reqScore: 500, rarity: "Secret", rColor: "#FF69B4" },
+        { id: 8, name: "Tennis Owl", reqScore: 9999, rarity: "Secret", rColor: "#DFFF00" },
+        { id: 9, name: "Bjork Owl", reqScore: 9999, rarity: "Secret", rColor: "#32CD32" },
+        { id: 10, name: "Gold Liliana", reqScore: 500, rarity: "Godly Secret", rColor: "#FFD700" },
+        { id: 11, name: "Silver Josh", reqScore: 250, rarity: "Godly Secret", rColor: "#C0C0C0" },
+        { id: 12, name: "Black Dani", reqScore: 500, rarity: "Secret", rColor: "#5C3A1E" }
+    ];
+
+    let selectedOwlIndex = 0;
+    let isGoldJoshUnlocked = false;
+    let isLilianaUnlocked = false; 
+    let isTennisUnlocked = false; 
+    let isBjorkUnlocked = false;  
+    let isGoldLilianaUnlocked = false;
+    let isSilverJoshUnlocked = false;
+    let isBlackDaniUnlocked = false;
+    let unlockCutsceneQueue = [];
+    let cutsceneEnterTime = 0;
+    let tennisJustUnlocked = false;
+
+    // --- GAME STATE ---
+    let state = 'MENU';
+    let score = 0;
+    let heightScore = 0; // pure height climbed this run, ratchets up on its own
+    let bonusScore = 0;  // points from collected hearts, added on top of heightScore
+    let bestScore = 0;
+    let cameraY = 0;
+    let isPointerDown = false;
+    let lastPointerPos = {x: 200, y: 300}; 
+
+    // --- UI BUTTON REGIONS ---
+    const btnReplay = {x: 100, y: 320, w: 200, h: 45};
+    const btnOwlSelect = {x: 100, y: 380, w: 200, h: 45};
+    const btnExit = {x: 100, y: 440, w: 200, h: 45};
+    const btnCheat = {x: 350, y: 550, w: 40, h: 40}; 
+    const btnBack = {x: 20, y: 20, w: 80, h: 40};
+    
+    // Dynamic Owl Selection Grid - generic so it lays out cleanly whatever the roster size, centering a short last row
+    const uiOwls = [];
+    const owlsPerRow = 3;
+    for (let i = 0; i < owlRoster.length; i++) {
+        let row = Math.floor(i / owlsPerRow);
+        let itemsInThisRow = Math.min(owlsPerRow, owlRoster.length - row * owlsPerRow);
+        let col = i % owlsPerRow;
+        let rowStartX = 35 + (owlsPerRow - itemsInThisRow) * 57.5;
+        let x = rowStartX + col * 115;
+        let y = 75 + row * 120;
+        uiOwls.push({x: x, y: y, w: 100, h: 105});
+    }
+
+    // Owl Selection grid is scrollable once the roster outgrows the screen
+    const OWL_GRID_TOP = 65;
+    const OWL_GRID_BOTTOM = canvas.height - 15;
+    const OWL_GRID_CONTENT_HEIGHT = 75 + Math.ceil(owlRoster.length / owlsPerRow) * 120;
+    const OWL_GRID_MAX_SCROLL = Math.max(0, OWL_GRID_CONTENT_HEIGHT - (OWL_GRID_BOTTOM - OWL_GRID_TOP));
+    let ownSelectScrollY = 0;
+    let owlSelectDrag = null;
+
+    // --- AESTHETICS ---
+    const stars = Array.from({length: 60}, () => ({
+        x: Math.random() * 400,
+        y: Math.random() * 600,
+        r: Math.random() * 1.5 + 0.5,
+        offset: Math.random() * Math.PI * 2
+    }));
+
+    // --- ENTITIES ---
+    let owl = {
+        x: 172.5, y: 450, vx: 0, vy: 0,
+        baseWidth: 55, baseHeight: 55,
+        charge: 0, isGrounded: true, trail: []
+    };
+    
+    let platforms = [];
+    let items = []; 
+    const GRAVITY = 0.45;
+    const MAX_CHARGE = 100;
+
+    // --- UTILITY ---
+    function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        let scaleX = canvas.width / rect.width;
+        let scaleY = canvas.height / rect.height;
+        let clientX = evt.clientX;
+        let clientY = evt.clientY;
+        
+        if (evt.touches && evt.touches.length > 0) {
+            clientX = evt.touches[0].clientX;
+            clientY = evt.touches[0].clientY;
+        } else if (evt.changedTouches && evt.changedTouches.length > 0) {
+            // touchend has nothing in evt.touches (finger already lifted) - the release
+            // position lives in changedTouches instead. Without this, aiming a jump by
+            // releasing your finger reads undefined coordinates and the launch goes to NaN.
+            clientX = evt.changedTouches[0].clientX;
+            clientY = evt.changedTouches[0].clientY;
+        }
+        return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    function isInside(pos, rect) {
+        return pos.x >= rect.x && pos.x <= rect.x + rect.w && pos.y >= rect.y && pos.y <= rect.y + rect.h;
+    }
+
+    // --- PRECISE VECTOR OWL RENDERER ---
+    function drawCodeOwl(ctx, x, y, w, h, id) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        let c = {};
+        if (id === 0) { c = { body: '#30BFE5', belly: '#2CA0C7', wing: '#1B8AA9', triangles: '#1A7A97', eyelid: '#30BFE5', beak: '#1F3243', pupil: '#1F3243', hair: null }; }
+        else if (id === 1) { c = { body: '#D0B6A0', belly: '#252627', wing: '#B49377', triangles: '#4A4D50', eyelid: '#D0B6A0', beak: '#252627', pupil: '#1F292E', hair: '#F1A2BA' }; }
+        else if (id === 11) { c = { body: '#D0B6A0', belly: '#252627', wing: '#B49377', triangles: '#4A4D50', eyelid: '#D0B6A0', beak: '#252627', pupil: '#1F292E', hair: '#C0C0C0' }; }
+        else if (id === 2) { c = { body: '#D0B6A0', belly: '#FFFFFF', wing: '#B49377', triangles: '#58595A', eyelid: '#D0B6A0', beak: '#252627', pupil: '#1F292E', hair: '#1B86D4' }; }
+        else if (id === 3) { c = { body: '#E8C39E', belly: '#D32F2F', wing: '#C29C74', triangles: '#B71C1C', eyelid: '#E8C39E', beak: '#252627', pupil: '#1F292E', hair: '#1A1A1A' }; }
+        else if (id === 12) { c = { body: '#6F4423', belly: '#D32F2F', wing: '#5C3A1E', triangles: '#B71C1C', eyelid: '#6F4423', beak: '#252627', pupil: '#1F292E', hair: '#1A1A1A' }; }
+        else if (id === 4) { c = { body: '#D0B6A0', belly: '#D32F2F', wing: '#B49377', triangles: '#1A1A1A', eyelid: '#D0B6A0', beak: '#252627', pupil: '#1F292E', hair: '#FDE047' }; }
+        else if (id === 5) { c = { body: '#D0B6A0', belly: '#4CAF50', wing: '#B49377', triangles: '#388E3C', eyelid: '#D0B6A0', beak: '#252627', pupil: '#1F292E', hair: '#2C1A14' }; }
+        else if (id === 6) { c = { body: '#D0B6A0', belly: '#FFDF00', wing: '#B49377', triangles: '#B8860B', eyelid: '#D0B6A0', beak: '#252627', pupil: '#1F292E', hair: '#FFDF00' }; }
+        else if (id === 7) { c = { body: '#D9B48F', belly: '#D9B48F', wing: '#C29A6E', triangles: 'transparent', eyelid: '#D9B48F', beak: '#8B6F47', pupil: '#100C09', hair: null }; } 
+        else if (id === 8) { c = { body: '#DFFF00', belly: '#DFFF00', wing: '#DFFF00', triangles: 'transparent', eyelid: '#DFFF00', beak: '#252627', pupil: '#1F292E', hair: null }; }
+        else if (id === 9) { c = { body: '#F3E5AB', belly: '#F3E5AB', wing: '#C29C74', triangles: 'transparent', eyelid: '#F3E5AB', beak: '#A85A32', pupil: '#252627', hair: '#D84315' }; }
+        else if (id === 10) { c = { body: '#F0D18C', belly: '#F0D18C', wing: '#E0B85E', triangles: 'transparent', eyelid: '#F0D18C', beak: '#B8860B', pupil: '#3A2C00', hair: null }; }
+
+        let bodyW = w * 0.76; let bodyX = w * 0.12;
+        let bodyY = h * 0.15; let bodyH = h * 0.75;
+        let rTop = w * 0.12;  let rBot = w * 0.22;
+
+        // WINGS
+        ctx.fillStyle = c.wing;
+        if (id === 9) {
+            ctx.beginPath(); ctx.ellipse(w*0.16, h*0.65, w*0.06, h*0.11, -Math.PI*0.08, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(w*0.84, h*0.65, w*0.12, h*0.22, Math.PI*0.08, 0, Math.PI*2); ctx.fill();
+        } else {
+            ctx.beginPath(); ctx.ellipse(w*0.16, h*0.65, w*0.12, h*0.22, -Math.PI*0.08, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(w*0.84, h*0.65, w*0.12, h*0.22, Math.PI*0.08, 0, Math.PI*2); ctx.fill();
+        }
+
+        // BODY
+        ctx.save(); ctx.beginPath();
+        if (id === 8) {
+            ctx.ellipse(w*0.5, h*0.5, w*0.4, h*0.4, 0, 0, Math.PI*2);
+        } else {
+            ctx.moveTo(bodyX + rTop, bodyY); ctx.lineTo(bodyX + bodyW - rTop, bodyY);
+            ctx.quadraticCurveTo(bodyX + bodyW, bodyY, bodyX + bodyW, bodyY + rTop);
+            ctx.lineTo(bodyX + bodyW, bodyY + bodyH - rBot);
+            ctx.quadraticCurveTo(bodyX + bodyW, bodyY + bodyH, bodyX + bodyW - rBot, bodyY + bodyH);
+            ctx.lineTo(bodyX + rBot, bodyY + bodyH);
+            ctx.quadraticCurveTo(bodyX, bodyY + bodyH, bodyX, bodyY + bodyH - rBot);
+            ctx.lineTo(bodyX, bodyY + rTop);
+            ctx.quadraticCurveTo(bodyX, bodyY, bodyX + rTop, bodyY);
+        }
+        ctx.closePath();
+        ctx.fillStyle = c.body; ctx.fill(); ctx.clip();
+
+        // TENNIS BALL SEAMS
+        if (id === 8) {
+            ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = w*0.04;
+            ctx.beginPath(); ctx.arc(w*0.1, h*0.5, w*0.35, -Math.PI/2.5, Math.PI/2.5); ctx.stroke();
+            ctx.beginPath(); ctx.arc(w*0.9, h*0.5, w*0.35, Math.PI - Math.PI/2.5, Math.PI + Math.PI/2.5); ctx.stroke();
+        }
+
+        // BELLY OR MASK
+        if (id === 7 || id === 10) {
+            ctx.fillStyle = '#1A1A1A'; 
+            ctx.fillRect(0, h*0.58, w, h*0.45); 
+            ctx.fillStyle = (id === 10) ? '#D4AF37' : '#3A3C3E';
+            const drawMaskTri = (tx, ty, tw, th, flip) => { 
+                ctx.beginPath(); 
+                if (flip) { ctx.moveTo(tx - tw/2, ty+th); ctx.lineTo(tx + tw/2, ty+th); ctx.lineTo(tx, ty); } 
+                else { ctx.moveTo(tx - tw/2, ty); ctx.lineTo(tx + tw/2, ty); ctx.lineTo(tx, ty + th); }
+                ctx.fill(); 
+            };
+            drawMaskTri(w*0.2, h*0.62, w*0.15, h*0.08, false); drawMaskTri(w*0.5, h*0.65, w*0.15, h*0.08, true); 
+            drawMaskTri(w*0.8, h*0.62, w*0.15, h*0.08, false); drawMaskTri(w*0.35, h*0.75, w*0.15, h*0.08, true); 
+            drawMaskTri(w*0.65, h*0.75, w*0.15, h*0.08, false);
+        } else if (id === 9) {
+            ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, h*0.62, w, h*0.5);
+            ctx.fillStyle = '#555555';
+            let sq = w*0.15;
+            for(let r=0; r<4; r++) {
+                for(let c=0; c<7; c++) {
+                    if ((r+c)%2 === 0) ctx.fillRect(c*sq, h*0.62 + r*sq, sq, sq);
+                }
+            }
+        } else {
+            ctx.fillStyle = c.belly; ctx.fillRect(0, h*0.62, w, h*0.5);
+            if (id === 4) {
+                ctx.fillStyle = '#1A1A1A';
+                ctx.fillRect(w*0.2, h*0.62, w*0.2, h*0.5); ctx.fillRect(w*0.6, h*0.62, w*0.2, h*0.5);
+            }
+            ctx.fillStyle = c.triangles;
+            const drawTri = (tx, ty, tw, th) => { ctx.beginPath(); ctx.moveTo(tx - tw/2, ty); ctx.lineTo(tx + tw/2, ty); ctx.lineTo(tx, ty + th); ctx.fill(); };
+            if(id !== 8) {
+                drawTri(w*0.33, h*0.68, w*0.1, h*0.07); drawTri(w*0.5, h*0.68, w*0.1, h*0.07); drawTri(w*0.67, h*0.68, w*0.1, h*0.07); 
+                drawTri(w*0.41, h*0.78, w*0.1, h*0.07); drawTri(w*0.59, h*0.78, w*0.1, h*0.07);
+            }
+        }
+        ctx.restore();
+
+        // HAIR / HEAD ACCESSORIES
+        if (id === 0) {
+            ctx.fillStyle = c.body;
+            ctx.beginPath(); ctx.moveTo(w*0.15, h*0.3); ctx.lineTo(w*0.18, h*0.06); ctx.lineTo(w*0.4, h*0.15); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(w*0.85, h*0.3); ctx.lineTo(w*0.82, h*0.06); ctx.lineTo(w*0.6, h*0.15); ctx.fill();
+        } else if (id === 1 || id === 2 || id === 4 || id === 5 || id === 6 || id === 11) {
+            ctx.fillStyle = c.hair;
+            ctx.beginPath(); ctx.moveTo(w*0.05, h*0.35);
+            ctx.bezierCurveTo(w*0.05, -h*0.15, w*0.95, -h*0.15, w*0.9, h*0.4);
+            ctx.bezierCurveTo(w*0.7, h*0.2, w*0.6, h*0.45, w*0.45, h*0.25);
+            ctx.bezierCurveTo(w*0.3, h*0.4, w*0.2, h*0.2, w*0.05, h*0.35); ctx.fill();
+            
+            ctx.beginPath(); ctx.moveTo(w*0.3, h*0.05);
+            ctx.bezierCurveTo(w*0.4, -h*0.05, w*0.6, h*0.1, w*0.7, h*0.02);
+            ctx.bezierCurveTo(w*0.6, -h*0.1, w*0.4, 0, w*0.3, h*0.05); ctx.fill();
+        } else if (id === 3 || id === 12) {
+            ctx.fillStyle = c.hair;
+            ctx.beginPath(); ctx.ellipse(w*0.5, h*0.15, w*0.4, h*0.2, 0, 0, Math.PI*2); ctx.fill();
+            const drawCurl = (cx, cy, radius) => { ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2); ctx.fill(); };
+            drawCurl(w*0.15, h*0.2, w*0.08); drawCurl(w*0.25, h*0.28, w*0.07); drawCurl(w*0.4, h*0.32, w*0.08); 
+            drawCurl(w*0.6, h*0.30, w*0.08); drawCurl(w*0.75, h*0.23, w*0.07); drawCurl(w*0.85, h*0.15, w*0.08);
+            drawCurl(w*0.3, h*0.05, w*0.09); drawCurl(w*0.5, h*0.0, w*0.1); drawCurl(w*0.7, h*0.03, w*0.09);
+        } else if (id === 7 || id === 10) {
+            // Liliana / Gold Liliana - simple long hair, with slight bangs and strand lines
+            let isGold = (id === 10);
+            const strandLine = (x1,y1,cx,cy,x2,y2,color) => {
+                ctx.strokeStyle = color;
+                ctx.beginPath(); ctx.moveTo(x1,y1); ctx.quadraticCurveTo(cx,cy,x2,y2); ctx.stroke();
+            };
+
+            // Main hair mass (darker at the roots, gold/pale-gold toward the ends)
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(w*0.5, -h*0.12);
+            ctx.bezierCurveTo(w*0.08, -h*0.12, -w*0.15, h*0.35, -w*0.06, h*0.85);
+            ctx.bezierCurveTo(w*0.02, h*0.95, w*0.07, h*0.6, w*0.13, h*0.88);
+            ctx.bezierCurveTo(w*0.22, h*0.62, w*0.28, h*0.2, w*0.5, h*0.05);
+            ctx.bezierCurveTo(w*0.72, h*0.2, w*0.78, h*0.62, w*0.87, h*0.88);
+            ctx.bezierCurveTo(w*0.93, h*0.6, w*0.98, h*0.95, w*1.06, h*0.85);
+            ctx.bezierCurveTo(w*1.15, h*0.35, w*0.92, -h*0.12, w*0.5, -h*0.12);
+            ctx.closePath();
+            let hairGrad = ctx.createLinearGradient(0, -h*0.12, 0, h*0.95);
+            if (isGold) {
+                hairGrad.addColorStop(0, '#B8860B');
+                hairGrad.addColorStop(0.45, '#E8C547');
+                hairGrad.addColorStop(0.85, '#FFF2B0');
+            } else {
+                hairGrad.addColorStop(0, '#4A3323');
+                hairGrad.addColorStop(0.45, '#8C6B3A');
+                hairGrad.addColorStop(0.85, '#D8B34E');
+            }
+            ctx.fillStyle = hairGrad;
+            ctx.fill();
+            ctx.clip();
+
+            // Strand separation lines flowing from the crown down to the tips
+            ctx.lineWidth = w*0.012; ctx.lineCap = 'round';
+            let sDark = isGold ? 'rgba(110,70,0,0.3)' : 'rgba(0,0,0,0.25)';
+            let sDark2 = isGold ? 'rgba(110,70,0,0.22)' : 'rgba(0,0,0,0.18)';
+            let sLight = isGold ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)';
+            strandLine(w*0.06,-h*0.05, w*-0.08,h*0.4, w*0.0,h*0.85, sDark);
+            strandLine(w*0.2,-h*0.08, w*0.1,h*0.4, w*0.15,h*0.85, sLight);
+            strandLine(w*0.35,-h*0.1, w*0.3,h*0.35, w*0.35,h*0.78, sDark2);
+            strandLine(w*0.94,-h*0.05, w*1.08,h*0.4, w*1.0,h*0.85, sDark);
+            strandLine(w*0.8,-h*0.08, w*0.9,h*0.4, w*0.85,h*0.85, sLight);
+            strandLine(w*0.65,-h*0.1, w*0.7,h*0.35, w*0.65,h*0.78, sDark2);
+            ctx.restore();
+
+            // Slight bangs, widened to close the forehead gap between the bangs and the sides
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(w*0.14, h*0.12);
+            ctx.quadraticCurveTo(w*0.5, -h*0.08, w*0.86, h*0.12);
+            ctx.quadraticCurveTo(w*0.5, h*0.24, w*0.14, h*0.12);
+            ctx.closePath();
+            ctx.fillStyle = isGold ? '#C9971F' : '#6E5228';
+            ctx.fill();
+            ctx.clip();
+            ctx.lineWidth = w*0.01; ctx.lineCap = 'round';
+            strandLine(w*0.28,h*0.0, w*0.38,h*0.1, w*0.34,h*0.2, isGold ? 'rgba(110,70,0,0.25)' : 'rgba(0,0,0,0.2)');
+            strandLine(w*0.5,-h*0.06, w*0.5,h*0.08, w*0.5,h*0.2, sLight);
+            strandLine(w*0.72,h*0.0, w*0.62,h*0.1, w*0.66,h*0.2, isGold ? 'rgba(110,70,0,0.25)' : 'rgba(0,0,0,0.2)');
+            ctx.restore();
+
+        } else if (id === 9) {
+            ctx.fillStyle = c.hair;
+            ctx.beginPath(); ctx.arc(w*0.5, h*0.25, w*0.45, Math.PI, 0); ctx.fill();
+            const drawBraid = (bx, by) => {
+                ctx.beginPath(); ctx.ellipse(bx, by, w*0.1, h*0.08, Math.PI/4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(bx, by+h*0.15, w*0.08, h*0.06, -Math.PI/4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(bx, by+h*0.28, w*0.06, h*0.05, Math.PI/4, 0, Math.PI*2); ctx.fill();
+            };
+            drawBraid(w*0.02, h*0.4); drawBraid(w*0.98, h*0.4);
+        }
+
+        // EYES
+        ctx.fillStyle = 'white';
+        let eyeY = h * 0.46; let eyeR = w * 0.23;
+        ctx.beginPath(); ctx.arc(w*0.34, eyeY, eyeR, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(w*0.66, eyeY, eyeR, 0, Math.PI*2); ctx.fill();
+
+        let lidY = eyeY - h*0.04; 
+        if (id === 7 || id === 10) lidY = eyeY + h*0.1;  // Very sleepy, half-lidded eyes
+        else if (id === 9) lidY = eyeY + h*0.06; // Droopy eyelids
+
+        ctx.save(); ctx.beginPath(); 
+        ctx.arc(w*0.34, eyeY, eyeR, 0, Math.PI*2); ctx.arc(w*0.66, eyeY, eyeR, 0, Math.PI*2); ctx.clip();
+        ctx.fillStyle = c.eyelid; ctx.fillRect(0, 0, w, lidY); ctx.restore();
+
+        // PUPILS
+        ctx.fillStyle = c.pupil;
+        let pupilR = (id === 7 || id === 10) ? w*0.11 : w*0.085;
+        ctx.beginPath(); ctx.arc(w*0.34, lidY, pupilR, 0, Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(w*0.66, lidY, pupilR, 0, Math.PI); ctx.fill();
+
+        // GLASSES FOR BJORK
+        if (id === 9) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+            ctx.lineWidth = w*0.06;
+            ctx.beginPath(); ctx.roundRect(w*0.08, h*0.3, w*0.4, h*0.28, w*0.1); ctx.stroke();
+            ctx.beginPath(); ctx.roundRect(w*0.52, h*0.3, w*0.4, h*0.28, w*0.1); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(w*0.48, h*0.42); ctx.lineTo(w*0.52, h*0.42); ctx.stroke();
+        }
+
+        // BEAK
+        ctx.fillStyle = c.beak;
+        let beakTop = lidY + h*0.02;
+        if (id === 7 || id === 10) beakTop = lidY - h*0.05; 
+        ctx.beginPath(); ctx.moveTo(w*0.44, beakTop); ctx.lineTo(w*0.56, beakTop); ctx.lineTo(w*0.5, beakTop + h*0.16); ctx.fill();
+
+        // NOSE PIERCING FOR LILIANA / GOLD LILIANA
+        if (id === 7 || id === 10) {
+            ctx.strokeStyle = (id === 10) ? '#FFD700' : '#D6D6D6';
+            ctx.lineWidth = w*0.035;
+            ctx.beginPath();
+            ctx.arc(w*0.545, beakTop + h*0.07, w*0.035, -Math.PI/2, Math.PI*0.8);
+            ctx.stroke();
+        }
+
+        if (id === 9) {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(w*0.475, beakTop + h*0.04, w*0.02, h*0.04);
+            ctx.fillRect(w*0.505, beakTop + h*0.04, w*0.02, h*0.04);
+        }
+
+        ctx.restore();
+    }
+
+    // --- INITIALIZATION ---
+    function initGame() {
+        score = 0; heightScore = 0; bonusScore = 0; cameraY = 0;
+        owl = { x: 172.5, y: 450, vx: 0, vy: 0, baseWidth: 55, baseHeight: 55, charge: 0, isGrounded: true, trail: [] };
+        platforms = [{ x: 0, y: 500, width: 400, height: 100, isSafe: true }];
+        items = [];
+        tennisJustUnlocked = false;
+        generatePlatforms(10, 500);
+        state = 'PLAYING';
+    }
+
+    function generatePlatforms(count, startY) {
+        let lastY = startY;
+        let activeId = owlRoster[selectedOwlIndex].id;
+        for (let i = 0; i < count; i++) {
+            let gapMultiplier = Math.min(1.5, 1 + (score / 100));
+            lastY -= (70 + Math.random() * 60) * gapMultiplier;
+            let minWidth = Math.max(40, 80 - (score / 5));
+            let width = minWidth + Math.random() * 50;
+            let x = Math.random() * (canvas.width - width);
+            platforms.push({ x: x, y: lastY, width: width, height: 15, isSafe: true });
+
+            if (!isTennisUnlocked && Math.random() < 0.01) {
+                items.push({x: x + width/2 - 10, y: lastY - 25, w: 20, h: 20, type: 'tennis', collected: false});
+            }
+            // Liliana's ability: hearts worth 50 height spawn along her run
+            if (activeId === 7 && Math.random() < 0.04) {
+                items.push({x: x + width/2 - 10, y: lastY - 25, w: 20, h: 20, type: 'heart', collected: false});
+            }
+            // Gold Liliana's ability: gold hearts worth 100 height spawn along her run
+            if (activeId === 10 && Math.random() < 0.04) {
+                items.push({x: x + width/2 - 10, y: lastY - 25, w: 20, h: 20, type: 'goldheart', collected: false});
+            }
+        }
+    }
+
+    // --- INPUT HANDLING ---
+    function updatePointerPos(e) { lastPointerPos = getMousePos(canvas, e); }
+
+    function advanceUnlockQueue() {
+        cutsceneEnterTime = Date.now();
+        state = unlockCutsceneQueue.length > 0 ? unlockCutsceneQueue.shift() : 'GAMEOVER';
+    }
+
+    function handlePointerDown(e) {
+        e.preventDefault(); updatePointerPos(e); let pos = lastPointerPos;
+
+        if (state === 'MENU') { initGame(); return; }
+
+        if (state === 'LILIANA_UNLOCK') { selectedOwlIndex = 7; advanceUnlockQueue(); return; }
+        if (state === 'BJORK_UNLOCK') { selectedOwlIndex = 9; advanceUnlockQueue(); return; }
+        if (state === 'TENNIS_UNLOCK') { selectedOwlIndex = 8; advanceUnlockQueue(); return; }
+        if (state === 'GOLDJOSH_UNLOCK') { selectedOwlIndex = 6; advanceUnlockQueue(); return; }
+        if (state === 'GOLDLILIANA_UNLOCK') { selectedOwlIndex = 10; advanceUnlockQueue(); return; }
+        if (state === 'SILVERJOSH_UNLOCK') { selectedOwlIndex = 11; advanceUnlockQueue(); return; }
+        if (state === 'BLACKDANI_UNLOCK') { selectedOwlIndex = 12; advanceUnlockQueue(); return; }
+        if (state === 'ARRESTED') { advanceUnlockQueue(); return; }
+
+        if (state === 'GAMEOVER') {
+            if (isInside(pos, btnCheat)) { 
+                bestScore = Math.max(bestScore, 9999); 
+                isGoldJoshUnlocked = true; 
+                selectedOwlIndex = 6;      
+                unlockCutsceneQueue = [];
+                cutsceneEnterTime = Date.now();
+                state = 'GOLDJOSH_UNLOCK';
+                return; 
+            }
+            if (isInside(pos, btnReplay)) { initGame(); return; }
+            if (isInside(pos, btnOwlSelect)) { state = 'OWL_SELECT'; ownSelectScrollY = 0; return; }
+            if (isInside(pos, btnExit)) { state = 'MENU'; return; }
+            return;
+        }
+
+        if (state === 'OWL_SELECT') {
+            // Don't act yet - wait to see if this is a tap (select) or a drag (scroll)
+            owlSelectDrag = { startY: pos.y, startScroll: ownSelectScrollY, moved: false, startPos: pos };
+            return;
+        }
+
+        if (state === 'PLAYING' && owl.isGrounded) isPointerDown = true;
+    }
+
+    function handlePointerMove(e) {
+        if (state === 'PLAYING') { e.preventDefault(); updatePointerPos(e); return; }
+        if (state === 'OWL_SELECT' && owlSelectDrag) {
+            e.preventDefault();
+            let pos = getMousePos(canvas, e);
+            let dy = pos.y - owlSelectDrag.startY;
+            if (Math.abs(dy) > 8) owlSelectDrag.moved = true;
+            ownSelectScrollY = Math.max(0, Math.min(OWL_GRID_MAX_SCROLL, owlSelectDrag.startScroll - dy));
+        }
+    }
+    function handlePointerUp(e) {
+        e.preventDefault(); if (state === 'PLAYING') updatePointerPos(e);
+        if (isPointerDown && owl.isGrounded && state === 'PLAYING') { isPointerDown = false; triggerJump(); }
+
+        if (state === 'OWL_SELECT' && owlSelectDrag) {
+            if (!owlSelectDrag.moved) {
+                // Was a tap, not a drag - resolve it as a button press or an owl pick
+                let pos = owlSelectDrag.startPos;
+                if (isInside(pos, btnBack)) { state = 'GAMEOVER'; owlSelectDrag = null; return; }
+                let contentPos = { x: pos.x, y: pos.y + ownSelectScrollY };
+                for (let i = 0; i < owlRoster.length; i++) {
+                    if (i === 6 && !isGoldJoshUnlocked) continue; 
+                    if (i === 7 && !isLilianaUnlocked) continue; 
+                    if (i === 8 && !isTennisUnlocked) continue;
+                    if (i === 9 && !isBjorkUnlocked) continue;
+                    if (i === 10 && !isGoldLilianaUnlocked) continue;
+                    if (i === 11 && !isSilverJoshUnlocked) continue;
+                    if (i === 12 && !isBlackDaniUnlocked) continue;
+
+                    if (isInside(contentPos, uiOwls[i])) {
+                        if (bestScore >= owlRoster[i].reqScore || i === 6 || i === 7 || i === 8 || i === 9 || i === 10 || i === 11 || i === 12) selectedOwlIndex = i;
+                    }
+                }
+            }
+            owlSelectDrag = null;
+        }
+    }
+
+    canvas.addEventListener('wheel', function(e) {
+        if (state === 'OWL_SELECT') {
+            e.preventDefault();
+            ownSelectScrollY = Math.max(0, Math.min(OWL_GRID_MAX_SCROLL, ownSelectScrollY + e.deltaY));
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('mousedown', handlePointerDown); canvas.addEventListener('mousemove', handlePointerMove);
+    canvas.addEventListener('mouseup', handlePointerUp); canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+    canvas.addEventListener('touchmove', handlePointerMove, { passive: false }); canvas.addEventListener('touchend', handlePointerUp, { passive: false });
+
+    // --- SECRET UNLOCK CODE: press 1, 1, 5 in order while on the main menu ---
+    let cheatKeyBuffer = [];
+    document.addEventListener('keydown', function(e) {
+        if (state !== 'MENU') { cheatKeyBuffer = []; return; }
+        if (!/^[0-9]$/.test(e.key)) return;
+        cheatKeyBuffer.push(e.key);
+        if (cheatKeyBuffer.length > 3) cheatKeyBuffer.shift();
+        if (cheatKeyBuffer.join('') === '115') {
+            cheatKeyBuffer = [];
+            isGoldJoshUnlocked = true;
+            isLilianaUnlocked = true;
+            isTennisUnlocked = true;
+            isBjorkUnlocked = true;
+            isGoldLilianaUnlocked = true;
+            isSilverJoshUnlocked = true;
+            isBlackDaniUnlocked = true;
+            bestScore = Math.max(bestScore, 9999);
+
+            // Show every owl-unlock cutscene, one after another
+            unlockCutsceneQueue = ['SILVERJOSH_UNLOCK', 'GOLDJOSH_UNLOCK', 'GOLDLILIANA_UNLOCK', 'BLACKDANI_UNLOCK', 'BJORK_UNLOCK', 'LILIANA_UNLOCK', 'TENNIS_UNLOCK'];
+            advanceUnlockQueue();
+        }
+    });
+
+    function triggerJump() {
+        let activeId = owlRoster[selectedOwlIndex].id;
+        let power = owl.charge / MAX_CHARGE;
+        let owlWorldX = owl.x + owl.baseWidth / 2; let owlWorldY = owl.y + owl.baseHeight / 2;
+        let targetWorldX = lastPointerPos.x; let targetWorldY = lastPointerPos.y + cameraY;
+        let dx = targetWorldX - owlWorldX; let dy = targetWorldY - owlWorldY;
+        let dist = Math.sqrt(dx*dx + dy*dy) || 1; 
+        
+        let speed = 8 + (power * 14); 
+        if (activeId === 12) speed *= 1.35; // Black Dani jumps higher
+        owl.vx = (dx / dist) * speed; owl.vy = (dy / dist) * speed; 
+        owl.isGrounded = false; owl.charge = 0;
+    }
+
+    // --- MAIN GAME LOOP ---
+    function update() {
+        if (state !== 'PLAYING') return;
+
+        let activeId = owlRoster[selectedOwlIndex].id;
+
+        if (isPointerDown && owl.isGrounded) {
+            owl.charge = Math.min(MAX_CHARGE, owl.charge + 2.5);
+        }
+
+        if (!owl.isGrounded) {
+            if (activeId === 9) owl.vx += (Math.random() - 0.5) * 2.0;
+
+            owl.vy += GRAVITY; owl.x += owl.vx; owl.y += owl.vy;
+            
+            if (activeId === 4 || activeId === 6 || activeId === 7 || activeId === 9 || activeId === 10) {
+                owl.trail.unshift({x: owl.x, y: owl.y, w: owl.baseWidth, h: owl.baseHeight});
+                if (owl.trail.length > 15) owl.trail.pop();
+            }
+            // Tennis Owl bounces off the walls instead of just thudding to a stop
+            let wallBounce = (activeId === 8) ? -0.85 : -0.1;
+            if (owl.x < 0) { owl.x = 0; owl.vx *= wallBounce; }
+            if (owl.x + owl.baseWidth > canvas.width) { owl.x = canvas.width - owl.baseWidth; owl.vx *= wallBounce; }
+        } else {
+            if (owl.trail && owl.trail.length > 0) owl.trail = [];
+        }
+
+        if (owl.vy > 0) {
+            for (let p of platforms) {
+                if (owl.y + owl.baseHeight >= p.y && owl.y + owl.baseHeight - owl.vy <= p.y + p.height) {
+                    if (owl.x + owl.baseWidth > p.x && owl.x < p.x + p.width) {
+                        owl.isGrounded = true; owl.y = p.y - owl.baseHeight;
+                        owl.vy = 0; owl.vx = 0; owl.charge = 0; break;
+                    }
+                }
+            }
+        }
+
+        items.forEach(item => {
+            if (!item.collected && owl.x < item.x + item.w && owl.x + owl.baseWidth > item.x && owl.y < item.y + item.h && owl.y + owl.baseHeight > item.y) {
+                item.collected = true;
+                if (item.type === 'tennis') {
+                    if (!isTennisUnlocked) tennisJustUnlocked = true;
+                    isTennisUnlocked = true;
+                } else if (item.type === 'heart') {
+                    bonusScore += 50;
+                } else if (item.type === 'goldheart') {
+                    bonusScore += 100;
+                }
+            }
+        });
+        items = items.filter(i => !i.collected);
+
+        if (owl.y < cameraY + 300) cameraY = owl.y - 300;
+        
+        let baseHeight = Math.floor(Math.abs(Math.min(0, cameraY)) / 50);
+        let currentHeight = baseHeight;
+        if (activeId === 6 || activeId === 10) currentHeight = baseHeight * 2;
+        else if (activeId === 11) currentHeight = Math.floor(baseHeight * 1.5);
+        if (currentHeight > heightScore) heightScore = currentHeight;
+        score = heightScore + bonusScore;
+
+        // Black Dani Owl's drawback: he gets arrested the moment he reaches 200 height
+        if (activeId === 12 && score >= 200) { triggerArrest(); return; }
+        
+        if (platforms[platforms.length - 1].y > cameraY - 800) generatePlatforms(5, platforms[platforms.length - 1].y);
+        if (platforms.length > 30) platforms.shift();
+        // Instant death the moment the owl's sprite touches the spike tips - no grace, no partial overlap allowed
+        let spikeTipY = cameraY + canvas.height - 20;
+        if (owl.y + owl.baseHeight >= spikeTipY) triggerGameOver();
+    }
+
+    function triggerArrest() {
+        // Reuse all the normal game-over bookkeeping (bestScore, unlocks, queued cutscenes),
+        // then make sure the ARRESTED cutscene plays first, ahead of anything else queued.
+        triggerGameOver();
+        if (state !== 'GAMEOVER') {
+            unlockCutsceneQueue.unshift(state);
+        }
+        cutsceneEnterTime = Date.now();
+        state = 'ARRESTED';
+    }
+
+    function triggerGameOver() { 
+        let wasLilianaLocked = !isLilianaUnlocked;
+        let wasBjorkLocked = !isBjorkUnlocked;
+        let wasGoldLilianaLocked = !isGoldLilianaUnlocked;
+        let wasSilverJoshLocked = !isSilverJoshUnlocked;
+        let wasBlackDaniLocked = !isBlackDaniUnlocked;
+        state = 'GAMEOVER'; 
+        if (score > bestScore) bestScore = score; 
+        isPointerDown = false; 
+
+        let activeId = owlRoster[selectedOwlIndex].id;
+        if (score >= 500 && (activeId === 1 || activeId === 2 || activeId === 6 || activeId === 11)) {
+            isLilianaUnlocked = true;
+        }
+        if (score >= 500 && activeId === 7) {
+            isGoldLilianaUnlocked = true;
+        }
+        if (score >= 250 && activeId === 1) {
+            isSilverJoshUnlocked = true;
+        }
+        if (score >= 500 && activeId === 3) {
+            isBlackDaniUnlocked = true;
+        }
+
+        if (!isBjorkUnlocked) isBjorkUnlocked = true;
+
+        // Queue up any owl-unlock cutscenes earned this run, then show the first one before the death menu
+        unlockCutsceneQueue = [];
+        if (wasBjorkLocked && isBjorkUnlocked) unlockCutsceneQueue.push('BJORK_UNLOCK');
+        if (wasSilverJoshLocked && isSilverJoshUnlocked) unlockCutsceneQueue.push('SILVERJOSH_UNLOCK');
+        if (wasLilianaLocked && isLilianaUnlocked) unlockCutsceneQueue.push('LILIANA_UNLOCK');
+        if (wasGoldLilianaLocked && isGoldLilianaUnlocked) unlockCutsceneQueue.push('GOLDLILIANA_UNLOCK');
+        if (wasBlackDaniLocked && isBlackDaniUnlocked) unlockCutsceneQueue.push('BLACKDANI_UNLOCK');
+        if (tennisJustUnlocked) unlockCutsceneQueue.push('TENNIS_UNLOCK');
+        tennisJustUnlocked = false;
+        if (unlockCutsceneQueue.length > 0) { cutsceneEnterTime = Date.now(); state = unlockCutsceneQueue.shift(); }
+    }
+
+    // --- UI DRAWING HELPERS ---
+    function drawButton(rect, text, isPrimary = false) {
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 12);
+        else ctx.rect(rect.x, rect.y, rect.w, rect.h); 
+        
+        ctx.fillStyle = isPrimary ? 'rgba(0, 229, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)';
+        ctx.fill();
+        ctx.strokeStyle = isPrimary ? '#00E5FF' : 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        ctx.fillStyle = isPrimary ? '#00E5FF' : '#ffffff'; 
+        ctx.font = 'bold 16px "Segoe UI", sans-serif'; 
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, rect.x + rect.w/2, rect.y + rect.h/2);
+        ctx.restore();
+    }
+
+    function drawRacket(x, y) {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(-Math.PI/8);
+        ctx.fillStyle = '#666'; ctx.fillRect(-2, 10, 4, 14);
+        ctx.fillStyle = '#444'; ctx.fillRect(-3, 22, 6, 4);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(0, -2, 10, 14, 0, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+    }
+
+    // x,y is the top-left corner and size is edge-length, matching the old inline 20x20 heart pickup icon
+    function drawMiniHeart(x, y, size, color) {
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.translate(x, y);
+        ctx.scale(size/20, size/20);
+        ctx.beginPath();
+        ctx.moveTo(10, 6);
+        ctx.bezierCurveTo(10, 2, 4, 0, 2, 5);
+        ctx.bezierCurveTo(0, 11, 6, 15, 10, 20);
+        ctx.bezierCurveTo(14, 15, 20, 11, 18, 5);
+        ctx.bezierCurveTo(16, 0, 10, 2, 10, 6);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Shared golden car body used by the Gold Josh and Gold Liliana unlock cutscenes
+    function drawCar(carCX, carY, bodyColor, darkColor, cabinColor) {
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath(); ctx.ellipse(carCX, carY + 78, 95, 14, 0, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = bodyColor;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(carCX - 90, carY + 15, 180, 45, 14); ctx.fill(); }
+        else { ctx.fillRect(carCX - 90, carY + 15, 180, 45); }
+        ctx.fillStyle = darkColor;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(carCX - 90, carY + 48, 180, 14, 6); ctx.fill(); }
+
+        ctx.fillStyle = cabinColor;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(carCX - 55, carY - 22, 110, 42, 12); ctx.fill(); }
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillRect(carCX - 45, carY - 14, 40, 24);
+        ctx.fillRect(carCX + 8, carY - 14, 40, 24);
+
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(carCX - 55, carY + 62, 20, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(carCX + 55, carY + 62, 20, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#E8E8E8';
+        ctx.beginPath(); ctx.arc(carCX - 55, carY + 62, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(carCX + 55, carY + 62, 8, 0, Math.PI*2); ctx.fill();
+    }
+    function drawGoldCar(carCX, carY) { drawCar(carCX, carY, '#FFD700', '#B8860B', '#FFE066'); }
+    function drawRedCar(carCX, carY) { drawCar(carCX, carY, '#E53935', '#8B0000', '#FF6F60'); }
+
+    // Simple police-owl prop for the arrest cutscene (not a selectable roster owl)
+    function drawPoliceOwl(x, y, size) {
+        ctx.save();
+        ctx.translate(x, y);
+        let s = size / 60;
+        ctx.scale(s, s);
+
+        ctx.fillStyle = '#152B63';
+        ctx.beginPath(); ctx.ellipse(12, 42, 8, 14, -0.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(48, 42, 8, 14, 0.2, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = '#1E3A8A';
+        ctx.beginPath(); ctx.ellipse(30, 38, 22, 26, 0, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath(); ctx.arc(30, 40, 7, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#1E3A8A';
+        ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('\u2605', 30, 41);
+
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(23, 22, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(37, 22, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(23, 22, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(37, 22, 4, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = '#F4A300';
+        ctx.beginPath(); ctx.moveTo(26, 28); ctx.lineTo(34, 28); ctx.lineTo(30, 35); ctx.fill();
+
+        ctx.fillStyle = '#152B63';
+        ctx.beginPath(); ctx.ellipse(30, 8, 18, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillRect(16, 2, 28, 8);
+        ctx.fillStyle = '#0d1a3d';
+        ctx.fillRect(14, 8, 32, 3);
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath(); ctx.arc(30, 6, 3, 0, Math.PI*2); ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawStars() {
+        let time = Date.now() / 1000;
+        ctx.fillStyle = '#0d0e15'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#0a0a1a'); grad.addColorStop(1, '#1b1433');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        stars.forEach(s => {
+            let twinkle = Math.abs(Math.sin(time * 2 + s.offset));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + twinkle * 0.7})`;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+        });
+    }
+
+    // --- RENDERING ---
+    function draw() {
+        if (state === 'MENU' || state === 'OWL_SELECT' || state === 'GAMEOVER') {
+            drawStars();
+        } else if (state === 'LILIANA_UNLOCK') {
+            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (state === 'BJORK_UNLOCK') {
+            let bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 40, canvas.width/2, canvas.height/2, 420);
+            bgGrad.addColorStop(0, '#5c4020');
+            bgGrad.addColorStop(1, '#2b1d10');
+            ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (state === 'GOLDJOSH_UNLOCK') {
+            let silverGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            silverGrad.addColorStop(0, '#f0f0f4');
+            silverGrad.addColorStop(0.5, '#c2c2c8');
+            silverGrad.addColorStop(1, '#8c8c94');
+            ctx.fillStyle = silverGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (state === 'TENNIS_UNLOCK') {
+            ctx.fillStyle = '#2e7d32'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 6;
+            ctx.strokeRect(28, 28, canvas.width - 56, canvas.height - 56);
+            ctx.beginPath(); ctx.moveTo(28, canvas.height/2); ctx.lineTo(canvas.width - 28, canvas.height/2); ctx.stroke();
+        } else if (state === 'GOLDLILIANA_UNLOCK') {
+            let glGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 30, canvas.width/2, canvas.height/2, 420);
+            glGrad.addColorStop(0, '#241a00');
+            glGrad.addColorStop(1, '#000000');
+            ctx.fillStyle = glGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (state === 'SILVERJOSH_UNLOCK') {
+            let sjGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            sjGrad.addColorStop(0, '#f0f0f4');
+            sjGrad.addColorStop(0.5, '#c2c2c8');
+            sjGrad.addColorStop(1, '#8c8c94');
+            ctx.fillStyle = sjGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (state === 'BLACKDANI_UNLOCK') {
+            let bdGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bdGrad.addColorStop(0, '#2b1b3d');
+            bdGrad.addColorStop(1, '#0d0a14');
+            ctx.fillStyle = bdGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (state === 'ARRESTED') {
+            ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            let flashOn = Math.floor(Date.now() / 300) % 2 === 0;
+            ctx.fillStyle = flashOn ? 'rgba(255,0,0,0.35)' : 'rgba(0,80,255,0.35)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+            ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        if (state !== 'MENU' && state !== 'OWL_SELECT' && state !== 'LILIANA_UNLOCK' && state !== 'BJORK_UNLOCK' && state !== 'GOLDJOSH_UNLOCK' && state !== 'TENNIS_UNLOCK' && state !== 'GOLDLILIANA_UNLOCK' && state !== 'SILVERJOSH_UNLOCK' && state !== 'BLACKDANI_UNLOCK' && state !== 'ARRESTED') {
+            ctx.save(); ctx.translate(0, -cameraY);
+
+            for (let p of platforms) {
+                if (ctx.roundRect) {
+                    ctx.beginPath(); ctx.roundRect(p.x, p.y, p.width, p.height, 4);
+                    ctx.fillStyle = '#2d3436'; ctx.fill();
+                    ctx.beginPath(); ctx.roundRect(p.x, p.y, p.width, 4, 2);
+                    ctx.fillStyle = '#00b894'; ctx.fill();
+                } else {
+                    ctx.fillStyle = '#2d3436'; ctx.fillRect(p.x, p.y, p.width, p.height);
+                    ctx.fillStyle = '#00b894'; ctx.fillRect(p.x, p.y, p.width, 4);
+                }
+            }
+
+            items.forEach(item => {
+                if(!item.collected) {
+                    if (item.type === 'heart') {
+                        drawMiniHeart(item.x, item.y, 20, '#FF3B5C');
+                    } else if (item.type === 'goldheart') {
+                        drawMiniHeart(item.x, item.y, 20, '#FFD700');
+                    } else {
+                        ctx.fillStyle = '#DFFF00'; ctx.beginPath(); ctx.arc(item.x + 10, item.y + 10, 10, 0, Math.PI*2); ctx.fill();
+                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+                        ctx.beginPath(); ctx.arc(item.x - 2, item.y + 10, 8, -Math.PI/3, Math.PI/3); ctx.stroke();
+                        ctx.beginPath(); ctx.arc(item.x + 22, item.y + 10, 8, Math.PI - Math.PI/3, Math.PI + Math.PI/3); ctx.stroke();
+                    }
+                }
+            });
+
+            ctx.fillStyle = '#d63031';
+            let spikeY = cameraY + canvas.height;
+            for(let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath(); ctx.moveTo(i, spikeY + 50); ctx.lineTo(i + 10, spikeY - 20); ctx.lineTo(i + 20, spikeY + 50); ctx.fill();
+            }
+
+            if (isPointerDown && owl.isGrounded) {
+                let owlWorldX = owl.x + owl.baseWidth / 2; let owlWorldY = owl.y + owl.baseHeight / 2;
+                let targetWorldX = lastPointerPos.x; let targetWorldY = lastPointerPos.y + cameraY;
+                ctx.beginPath(); ctx.setLineDash([8, 8]); ctx.moveTo(owlWorldX, owlWorldY); ctx.lineTo(targetWorldX, targetWorldY);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + (owl.charge/MAX_CHARGE)*0.6})`; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+            }
+
+            let activeId = owlRoster[selectedOwlIndex].id;
+            if ((activeId === 4 || activeId === 6 || activeId === 7 || activeId === 9 || activeId === 10) && owl.trail && owl.trail.length > 0) {
+                let rColors = activeId === 4 ? ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'] : ['#FFD700', '#FFDF00', '#FFEA00', '#FFF44F', '#FFD700']; 
+                if (activeId === 7) rColors = ['#C6A034', '#3B2A1F', '#E8C97A', '#2A1A14']; 
+                if (activeId === 9) rColors = ['#228B22', '#32CD32', '#7CFC00', '#ADFF2F']; 
+                if (activeId === 10) rColors = ['#FFD700', '#FFF2B0', '#E8E8E8', '#B8860B'];
+
+                owl.trail.forEach((t, idx) => {
+                    ctx.save(); ctx.globalAlpha = Math.max(0, 0.7 - (idx / owl.trail.length));
+                    ctx.fillStyle = rColors[idx % rColors.length];
+                    
+                    if (activeId === 7 || activeId === 9 || activeId === 10) {
+                        let size = (t.w/2.5) * (1 - idx/owl.trail.length);
+                        let cx = t.x + t.w/2; let cy = t.y + t.h/2;
+                        ctx.translate(cx, cy);
+                        ctx.beginPath();
+                        ctx.moveTo(0, size/4);
+                        ctx.bezierCurveTo(size/2, -size/2, size, size/3, 0, size);
+                        ctx.bezierCurveTo(-size, size/3, -size/2, -size/2, 0, size/4);
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath(); ctx.arc(t.x + t.w/2, t.y + t.h/2, (t.w/2.2) * (1 - idx/owl.trail.length), 0, Math.PI*2); ctx.fill(); 
+                    }
+                    ctx.restore();
+                });
+            }
+
+            let drawW = owl.baseWidth; let drawH = owl.baseHeight; let drawY = owl.y;
+            if (isPointerDown && owl.isGrounded) {
+                let squashAmount = (owl.charge / MAX_CHARGE) * 20; drawH -= squashAmount; drawW += squashAmount * 0.5; drawY += squashAmount; 
+            } else if (!owl.isGrounded) { drawH += 8; drawW -= 6; }
+
+            drawCodeOwl(ctx, owl.x - (drawW - owl.baseWidth)/2, drawY, drawW, drawH, owlRoster[selectedOwlIndex].id);
+            ctx.restore(); 
+        }
+
+        if (state === 'PLAYING') {
+            ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = 'bold 22px "Segoe UI", sans-serif'; 
+            ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillText("Height: " + score, 17, 37);
+            ctx.fillStyle = '#ffffff'; ctx.fillText("Height: " + score, 15, 35); 
+        }
+
+        if (state === 'MENU') {
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+            // Soft glowing moon, upper right
+            let moonGlow = ctx.createRadialGradient(350, 55, 0, 350, 55, 32);
+            moonGlow.addColorStop(0, 'rgba(255,250,225,0.55)');
+            moonGlow.addColorStop(1, 'rgba(255,250,225,0)');
+            ctx.fillStyle = moonGlow;
+            ctx.beginPath(); ctx.arc(350, 55, 32, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#FFF9E6';
+            ctx.beginPath(); ctx.arc(350, 55, 16, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(200,190,160,0.35)';
+            ctx.beginPath(); ctx.arc(345, 50, 3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(356, 61, 2, 0, Math.PI*2); ctx.fill();
+
+            // Twinkling sparkle accents
+            let sparkleT = Date.now() / 300;
+            const menuSparkles = [[42, 95], [46, 178], [358, 190]];
+            menuSparkles.forEach((p, i) => {
+                let tw = Math.abs(Math.sin(sparkleT + i * 1.4));
+                ctx.strokeStyle = `rgba(255,255,255,${0.2 + tw * 0.6})`; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(p[0]-5, p[1]); ctx.lineTo(p[0]+5, p[1]); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(p[0], p[1]-5); ctx.lineTo(p[0], p[1]+5); ctx.stroke();
+            });
+
+            // Title - gradient fill with a gentle breathing pulse
+            ctx.save();
+            ctx.translate(canvas.width/2, 128);
+            let titlePulse = 1 + Math.sin(Date.now() / 600) * 0.015;
+            ctx.scale(titlePulse, titlePulse);
+            let titleGrad = ctx.createLinearGradient(-165, 0, 165, 0);
+            titleGrad.addColorStop(0, '#00E5FF');
+            titleGrad.addColorStop(0.5, '#9FF3FF');
+            titleGrad.addColorStop(1, '#B18CFF');
+            ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 22;
+            ctx.fillStyle = titleGrad;
+            ctx.font = '900 36px "Segoe UI", sans-serif';
+            ctx.fillText("OWL CAN'T SLEEP 2", 0, 0);
+            ctx.restore();
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.font = 'italic 15px "Segoe UI", sans-serif';
+            ctx.fillText("By: Joshua", canvas.width/2, 160);
+
+            ctx.strokeStyle = 'rgba(0,229,255,0.3)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(canvas.width/2 - 50, 180); ctx.lineTo(canvas.width/2 + 50, 180); ctx.stroke();
+
+            // Bobbing mascot owl with a grounded shadow and drifting sleepy Z's
+            let bob = Math.sin(Date.now() / 500) * 10;
+            let mascotSize = 100;
+            let shadowAlpha = Math.max(0.12, 0.25 - (bob / 10) * 0.08);
+            ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
+            ctx.beginPath(); ctx.ellipse(canvas.width/2, 366, 44 - bob * 0.5, 10, 0, 0, Math.PI*2); ctx.fill();
+
+            drawCodeOwl(ctx, canvas.width/2 - mascotSize/2, 250 + bob, mascotSize, mascotSize, 0);
+
+            let zBase = Date.now() / 900;
+            for (let i = 0; i < 3; i++) {
+                let phase = (zBase + i * 0.33) % 1;
+                let zx = canvas.width/2 + 46 + i * 6;
+                let zy = 250 + bob - 10 - phase * 55;
+                let zAlpha = Math.sin(phase * Math.PI);
+                ctx.fillStyle = `rgba(0,229,255,${zAlpha * 0.85})`;
+                ctx.font = `bold ${12 + i * 4}px "Segoe UI", sans-serif`;
+                ctx.fillText("Z", zx, zy);
+            }
+
+            // Instructions card
+            ctx.save();
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(60, 396, 280, 64, 14); else ctx.rect(60, 396, 280, 64);
+            ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fill();
+            ctx.strokeStyle = 'rgba(0,229,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '14px "Segoe UI", sans-serif';
+            ctx.fillText("Hold & Aim towards cursor", canvas.width/2, 418);
+            ctx.fillText("Release to jump", canvas.width/2, 442);
+
+            // Glowing "TAP TO START" pill button
+            let pulse = Math.abs(Math.sin(Date.now() / 400));
+            let btnW = 190, btnH = 52, btnX = canvas.width/2 - btnW/2, btnY = 490;
+            ctx.save();
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(btnX, btnY, btnW, btnH, 26); else ctx.rect(btnX, btnY, btnW, btnH);
+            let btnGrad = ctx.createLinearGradient(btnX, 0, btnX + btnW, 0);
+            btnGrad.addColorStop(0, `rgba(0,229,255,${0.28 + pulse * 0.25})`);
+            btnGrad.addColorStop(1, `rgba(150,110,255,${0.28 + pulse * 0.25})`);
+            ctx.fillStyle = btnGrad; ctx.fill();
+            ctx.strokeStyle = `rgba(0,229,255,${0.5 + pulse * 0.5})`; ctx.lineWidth = 2; ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            ctx.fillText("TAP TO START", canvas.width/2, btnY + btnH/2);
+        }
+
+        if (state === 'BJORK_UNLOCK') {
+            let cloudX = canvas.width/2, cloudY = 230;
+
+            // Sickly green poison cloud - overlapping soft blobs
+            ctx.fillStyle = 'rgba(70, 140, 35, 0.5)';
+            ctx.beginPath(); ctx.arc(cloudX - 75, cloudY + 15, 70, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cloudX + 75, cloudY + 15, 70, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cloudX, cloudY - 35, 85, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cloudX, cloudY + 45, 95, 0, Math.PI*2); ctx.fill();
+
+            ctx.fillStyle = 'rgba(140, 220, 80, 0.45)';
+            ctx.beginPath(); ctx.arc(cloudX - 40, cloudY - 15, 55, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cloudX + 45, cloudY - 5, 55, 0, Math.PI*2); ctx.fill();
+
+            // Flies buzzing around the cloud
+            let flyT = Date.now() / 150;
+            const flyAnchors = [
+                [cloudX - 140, cloudY - 60], [cloudX + 130, cloudY - 55], [cloudX - 105, cloudY + 95],
+                [cloudX + 115, cloudY + 85], [cloudX - 15, cloudY - 115], [cloudX + 25, cloudY + 130],
+                [cloudX - 160, cloudY + 25], [cloudX + 160, cloudY + 15]
+            ];
+            flyAnchors.forEach((a, i) => {
+                let fx = a[0] + Math.cos(flyT + i*1.7) * 12;
+                let fy = a[1] + Math.sin(flyT*1.3 + i*2.1) * 10;
+                ctx.fillStyle = '#161616';
+                ctx.beginPath(); ctx.arc(fx, fy, 3, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(fx-4, fy-2); ctx.lineTo(fx-8, fy-5); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(fx+4, fy-2); ctx.lineTo(fx+8, fy-5); ctx.stroke();
+            });
+
+            // Bjork Owl emerging from the middle of the cloud
+            drawCodeOwl(ctx, cloudX - 40, cloudY - 35, 80, 80, 9);
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#c8ffb0'; ctx.font = 'bold 26px "Segoe UI", sans-serif';
+            ctx.fillText("Bjork has awakened...", canvas.width/2, cloudY + 165);
+
+            ctx.fillStyle = 'rgba(200, 255, 176, 0.85)'; ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText("Missing a Wing: Flies Sped", canvas.width/2, cloudY + 195);
+
+            let bjorkPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + bjorkPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to advance", canvas.width/2, cloudY + 235);
+        }
+
+        if (state === 'LILIANA_UNLOCK') {
+            // Huge red heart centered on the black background
+            let heartX = canvas.width/2, heartY = 175, heartSize = 260;
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(255, 182, 193, 0.9)'; ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText("Spawns Hearts worth 50 height", canvas.width/2, heartY - 30);
+
+            ctx.fillStyle = '#E10600';
+            ctx.beginPath();
+            let topCurveHeight = heartSize * 0.3;
+            ctx.moveTo(heartX, heartY + topCurveHeight);
+            ctx.bezierCurveTo(heartX, heartY, heartX - heartSize/2, heartY, heartX - heartSize/2, heartY + topCurveHeight);
+            ctx.bezierCurveTo(heartX - heartSize/2, heartY + (heartSize+topCurveHeight)/2, heartX, heartY + (heartSize+topCurveHeight)/2, heartX, heartY + heartSize);
+            ctx.bezierCurveTo(heartX, heartY + (heartSize+topCurveHeight)/2, heartX + heartSize/2, heartY + (heartSize+topCurveHeight)/2, heartX + heartSize/2, heartY + topCurveHeight);
+            ctx.bezierCurveTo(heartX + heartSize/2, heartY, heartX, heartY, heartX, heartY + topCurveHeight);
+            ctx.closePath(); ctx.fill();
+
+            // Josh Owl (pink hair, id 1) and Liliana Owl (id 7), side by side in the middle of the heart
+            drawCodeOwl(ctx, heartX - 85, heartY + 70, 75, 75, 1);
+            drawCodeOwl(ctx, heartX + 10, heartY + 70, 75, 75, 7);
+
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.fillText("Josh + Liliana", canvas.width/2, heartY + heartSize + 20);
+
+            let pulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + pulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to proceed", canvas.width/2, heartY + heartSize + 60);
+        }
+
+        if (state === 'GOLDJOSH_UNLOCK') {
+            // Sparkles on the silver background
+            let sparkleT = Date.now() / 300;
+            const sparklePts = [[60,90],[340,70],[50,480],[350,500],[300,150],[90,520]];
+            sparklePts.forEach((p, i) => {
+                let tw = Math.abs(Math.sin(sparkleT + i*1.3));
+                ctx.strokeStyle = `rgba(255,255,255,${0.3 + tw*0.6})`; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(p[0]-6, p[1]); ctx.lineTo(p[0]+6, p[1]); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(p[0], p[1]-6); ctx.lineTo(p[0], p[1]+6); ctx.stroke();
+            });
+
+            // Golden car rolls in from off-screen to the center
+            let elapsed = Date.now() - cutsceneEnterTime;
+            let driveT = Math.min(elapsed / 900, 1);
+            let eased = 1 - Math.pow(1 - driveT, 3);
+            let carCX = -140 + eased * (canvas.width/2 - (-140));
+            let carY = 330;
+            drawGoldCar(carCX, carY);
+
+            // Gold Josh Owl riding on top
+            drawCodeOwl(ctx, carCX - 35, carY - 78, 70, 70, 6);
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#3a2c00'; ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.fillText("Gold Josh Owl", canvas.width/2, 470);
+
+            ctx.fillStyle = '#6b5200'; ctx.font = '16px "Segoe UI", sans-serif';
+            ctx.fillText("2x Height Multiplier", canvas.width/2, 500);
+
+            let goldPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(60, 45, 0, ${0.5 + goldPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to ride on", canvas.width/2, 540);
+        }
+
+        if (state === 'GOLDLILIANA_UNLOCK') {
+            // Floating gold and silver hearts drifting in the background
+            let heartT = Date.now() / 1000;
+            const bgHeartAnchors = [
+                [40,80,'#FFD700'], [360,60,'#E8E8E8'], [30,240,'#E8E8E8'], [370,210,'#FFD700'],
+                [55,410,'#FFD700'], [345,390,'#E8E8E8'], [20,540,'#E8E8E8'], [380,530,'#FFD700'],
+                [200,35,'#E8E8E8'], [190,565,'#FFD700']
+            ];
+            bgHeartAnchors.forEach((a, i) => {
+                let bob = Math.sin(heartT + i*1.1) * 10;
+                drawMiniHeart(a[0], a[1] + bob, 18 + (i%3)*4, a[2]);
+            });
+
+            // Golden car rolls in from off-screen to the center, carrying both golden owls
+            let glElapsed = Date.now() - cutsceneEnterTime;
+            let glDriveT = Math.min(glElapsed / 900, 1);
+            let glEased = 1 - Math.pow(1 - glDriveT, 3);
+            let glCarCX = -140 + glEased * (canvas.width/2 - (-140));
+            let glCarY = 330;
+            drawGoldCar(glCarCX, glCarY);
+
+            // Gold Josh Owl and Gold Liliana Owl riding side by side on top
+            drawCodeOwl(ctx, glCarCX - 68, glCarY - 76, 62, 62, 6);
+            drawCodeOwl(ctx, glCarCX + 6, glCarY - 76, 62, 62, 10);
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 24px "Segoe UI", sans-serif';
+            ctx.fillText("Gold Josh + Gold Liliana", canvas.width/2, 465);
+
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.9)'; ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText("2x Height Multiplier", canvas.width/2, 495);
+            ctx.fillText("Gold hearts spawn for 100 height", canvas.width/2, 517);
+
+            let glPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + glPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to proceed", canvas.width/2, 555);
+        }
+
+        if (state === 'SILVERJOSH_UNLOCK') {
+            let sjElapsed = Date.now() - cutsceneEnterTime;
+            let popT = Math.max(0, Math.min((sjElapsed - 200) / 500, 1));
+            let popScale = Math.max(0.5 + popT*0.5 + Math.sin(popT*Math.PI)*0.15, 0.01);
+
+            ctx.save();
+            ctx.translate(canvas.width/2, 300);
+            ctx.scale(popScale, popScale);
+            drawCodeOwl(ctx, -45, -45, 90, 90, 11);
+            ctx.restore();
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#3a3a3a'; ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.fillText("Silver Josh Owl", canvas.width/2, 430);
+
+            ctx.fillStyle = '#5a5a5a'; ctx.font = '16px "Segoe UI", sans-serif';
+            ctx.fillText("1.5x Height Multiplier", canvas.width/2, 460);
+
+            let sjPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(40, 40, 40, ${0.5 + sjPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to continue", canvas.width/2, 500);
+        }
+
+        if (state === 'BLACKDANI_UNLOCK') {
+            let bdElapsed = Date.now() - cutsceneEnterTime;
+            let bdDriveT = Math.min(bdElapsed / 900, 1);
+            let bdEased = 1 - Math.pow(1 - bdDriveT, 3);
+            let bdCarCX = -140 + bdEased * (canvas.width/2 - (-140));
+            let bdCarY = 330;
+            drawRedCar(bdCarCX, bdCarY);
+
+            drawCodeOwl(ctx, bdCarCX - 35, bdCarY - 78, 70, 70, 12);
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.fillText("Black Dani Owl", canvas.width/2, 465);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText("Jumps Higher", canvas.width/2, 493);
+            ctx.fillText("Gets Arrested After 200 Height", canvas.width/2, 515);
+
+            let bdPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + bdPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to ride on", canvas.width/2, 550);
+        }
+
+        if (state === 'ARRESTED') {
+            drawCodeOwl(ctx, canvas.width/2 - 110, 260, 85, 85, 12);
+
+            ctx.strokeStyle = '#ccc'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(canvas.width/2 - 8, 300, 10, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(canvas.width/2 + 16, 300, 10, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(canvas.width/2 + 2, 300); ctx.lineTo(canvas.width/2 + 6, 300); ctx.stroke();
+
+            drawPoliceOwl(canvas.width/2 + 40, 210, 95);
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 30px "Segoe UI", sans-serif';
+            ctx.fillText("ARRESTED!", canvas.width/2, 410);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText("Black Dani hit his 200 height limit", canvas.width/2, 440);
+
+            let arrestPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + arrestPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to continue", canvas.width/2, 480);
+        }
+
+        if (state === 'TENNIS_UNLOCK') {
+            let elapsed = Date.now() - cutsceneEnterTime;
+            let ballT = Math.min(elapsed / 1000, 1);
+            let ballX = 40 + ballT * (canvas.width/2 - 40);
+            let ballY = 200 - Math.abs(Math.sin(ballT * Math.PI * 3.5)) * 140 * (1 - ballT*0.4);
+
+            if (ballT < 1) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(ballX - 30, ballY); ctx.lineTo(ballX - 6, ballY); ctx.stroke();
+            }
+
+            ctx.fillStyle = '#DFFF00';
+            ctx.beginPath(); ctx.arc(ballX, ballY, 16, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(ballX - 4, ballY, 13, -Math.PI/3, Math.PI/3); ctx.stroke();
+            ctx.beginPath(); ctx.arc(ballX + 36, ballY, 13, Math.PI - Math.PI/3, Math.PI + Math.PI/3); ctx.stroke();
+
+            // Tennis Owl pops into view with a little elastic overshoot
+            let popT = Math.max(0, Math.min((elapsed - 700) / 400, 1));
+            let popScale = Math.max(0.5 + popT*0.5 + Math.sin(popT*Math.PI)*0.15, 0.01);
+            ctx.save();
+            ctx.translate(canvas.width/2, 320);
+            ctx.scale(popScale, popScale);
+            drawCodeOwl(ctx, -40, -40, 80, 80, 8);
+            ctx.restore();
+
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.fillText("Tennis Owl", canvas.width/2, 440);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText("Bounces off Walls", canvas.width/2, 465);
+
+            let tennisPulse = Math.abs(Math.sin(Date.now() / 400));
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + tennisPulse * 0.5})`;
+            ctx.font = '18px "Segoe UI", sans-serif';
+            ctx.fillText("Click to serve", canvas.width/2, 500);
+        }
+
+        if (state === 'GAMEOVER') {
+            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (ctx.roundRect) {
+                ctx.beginPath(); ctx.roundRect(canvas.width/2 - 40, 60, 80, 80, 15);
+                ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
+            }
+            drawCodeOwl(ctx, canvas.width/2 - 30, 70, 60, 60, owlRoster[selectedOwlIndex].id);
+            
+            ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+            ctx.font = 'bold 32px "Segoe UI", sans-serif'; ctx.fillText("GAME OVER", canvas.width/2, 180);
+            
+            ctx.font = '18px "Segoe UI", sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillText("Height Reached", canvas.width/2, 220);
+            ctx.fillStyle = '#00E5FF'; ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.fillText(score, canvas.width/2, 250);
+
+            ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillText("Best Score: " + bestScore, canvas.width/2, 280);
+            
+            drawButton(btnReplay, "Replay", true);
+            drawButton(btnOwlSelect, "Owl Selection");
+            drawButton(btnExit, "Main Menu");
+            drawRacket(btnCheat.x + btnCheat.w/2, btnCheat.y + btnCheat.h/2);
+        }
+
+        if (state === 'OWL_SELECT') {
+            drawButton(btnBack, "Back");
+
+            ctx.fillStyle = '#00E5FF'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+            ctx.font = 'bold 24px "Segoe UI", sans-serif';
+            ctx.fillText("SELECT OWL", canvas.width/2, 40);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, OWL_GRID_TOP, canvas.width, OWL_GRID_BOTTOM - OWL_GRID_TOP);
+            ctx.clip();
+            ctx.translate(0, -ownSelectScrollY);
+
+            for (let i = 0; i < owlRoster.length; i++) {
+                if (i === 6 && !isGoldJoshUnlocked) continue; 
+                if (i === 7 && !isLilianaUnlocked) continue; 
+                if (i === 8 && !isTennisUnlocked) continue; 
+                if (i === 9 && !isBjorkUnlocked) continue; 
+                if (i === 10 && !isGoldLilianaUnlocked) continue;
+                if (i === 11 && !isSilverJoshUnlocked) continue;
+                if (i === 12 && !isBlackDaniUnlocked) continue;
+
+                let box = uiOwls[i];
+                let isUnlocked = bestScore >= owlRoster[i].reqScore || i === 6 || i === 7 || i === 8 || i === 9 || i === 10 || i === 11 || i === 12;
+
+                ctx.save();
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(box.x, box.y, box.w, box.h, 12); else ctx.rect(box.x, box.y, box.w, box.h);
+                ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fill();
+                
+                if (selectedOwlIndex === i) {
+                    ctx.strokeStyle = '#00E5FF'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.fillStyle = 'rgba(0, 229, 255, 0.1)'; ctx.fill();
+                } else {
+                    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+                }
+                ctx.restore();
+
+                drawCodeOwl(ctx, box.x + 20, box.y + 10, 60, 60, owlRoster[i].id);
+
+                if (!isUnlocked) {
+                    ctx.save();
+                    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(box.x, box.y, box.w, box.h, 12); ctx.clip(); }
+                    ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(box.x, box.y, box.w, box.h);
+                    ctx.fillStyle = '#ff4757'; ctx.font = 'bold 12px "Segoe UI", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText("Score " + owlRoster[i].reqScore, box.x + box.w/2, box.y + box.h/2);
+                    ctx.restore();
+                }
+
+                ctx.fillStyle = '#ffffff'; ctx.font = '13px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(owlRoster[i].name, box.x + box.w/2, box.y + 80);
+
+                ctx.fillStyle = owlRoster[i].rColor; ctx.font = 'bold 11px "Segoe UI", sans-serif'; 
+                ctx.fillText(owlRoster[i].rarity.toUpperCase(), box.x + box.w/2, box.y + 95);
+            }
+            ctx.restore();
+
+            // Scrollbar - only shown once the roster is taller than the viewport
+            if (OWL_GRID_MAX_SCROLL > 0) {
+                let trackX = canvas.width - 12;
+                let trackH = OWL_GRID_BOTTOM - OWL_GRID_TOP;
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(trackX, OWL_GRID_TOP, 6, trackH, 3); ctx.fill(); }
+
+                let thumbH = Math.max(28, trackH * (trackH / OWL_GRID_CONTENT_HEIGHT));
+                let thumbY = OWL_GRID_TOP + (trackH - thumbH) * (ownSelectScrollY / OWL_GRID_MAX_SCROLL);
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.7)';
+                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(trackX, thumbY, 6, thumbH, 3); ctx.fill(); }
+            }
+        }
+    }
+
+    // --- ENGINE LOOP ---
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    loop();
+</script>
+</body>
+</html>
